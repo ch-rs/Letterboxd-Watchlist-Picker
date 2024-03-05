@@ -67,9 +67,7 @@ export default {
             users: "", // list of users to search
             advancedOptions: {}, // advanced option settings
 
-            movies: [], // list of movies to display
-
-            testMovies: [
+            movies: [
                 {
                     title: "The Shawshank Redemption",
                     url: "https://www.imdb.com/title/tt0111161/",

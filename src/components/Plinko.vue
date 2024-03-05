@@ -58,6 +58,16 @@ let sketch = function (p, parent) {
             }
         });
         */
+    };
+
+    p.populate = function (newMovies) {
+        // Calculate the width of each slot
+        setTimeout(() => {
+            slotWidth = p.width / newMovies.length;
+
+            p.createPlinkos();
+            p.createBoundaries();
+        }, 1000);
 
         Matter.Events.on(engine, "collisionStart", function (event) {
             for (let i = 0; i < event.pairs.length; i++) {
@@ -74,16 +84,6 @@ let sketch = function (p, parent) {
                 }
             }
         });
-    };
-
-    p.populate = function (newMovies) {
-        // Calculate the width of each slot
-        setTimeout(() => {
-            slotWidth = p.width / newMovies.length;
-
-            p.createPlinkos();
-            p.createBoundaries();
-        }, 1000);
     };
 
     p.newParticle = function () {
@@ -254,12 +254,7 @@ export default {
     mounted() {
         this.myp5 = new p5(sketch, this.$refs.myCanvas);
         // Wait for movies to have length
-        this.$watch(
-            () => this.movies && this.movies.length,
-            () => {
-                this.myp5.populate(this.movies);
-            },
-        );
+        this.myp5.populate(this.movies);
     },
 };
 </script>
