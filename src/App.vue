@@ -216,8 +216,8 @@ export default {
                             var pre_image = new Image();
                             pre_image.src = json.image_url;
                         }
-                        console.log(json);
-                        vue.movies = JSON.parse(json);
+
+                        vue.movies = json;
                     });
             } catch (e) {
                 alert(
