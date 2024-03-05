@@ -2,8 +2,10 @@
     <section>
         <label for="userbox"> Username(s): </label>
         <div class="options">
-            <button v-on:click="setValue('ch_rs/the-wheel')">The Wheel</button>
-            <button v-on:click="setValue('ch_rs/eva-2')">EVA 2</button>
+            <button v-on:click="updateValue('ch_rs/the-wheel')">
+                The Wheel
+            </button>
+            <button v-on:click="updateValue('ch_rs/eva-2')">EVA 2</button>
         </div>
 
         <div class="form-container">
