@@ -217,15 +217,14 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) (film, erro
 	if ignoreList.feature {
 		filmList = ignoreFeature(filmList)
 	}
-	n := rand.Intn(len(filmList))
-	log.Println(len(filmList))
-	log.Println(n)
-	log.Println(filmList[n])
-	finalFilm = filmList[n]
+
+	rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
+
 	if strings.Contains(finalFilm.Image, "https://s.ltrbxd.com/static/img/empty-poster") {
 		finalFilm.Image = "https://watchlistpicker.com/noimagefound.jpg"
 	}
-	return finalFilm, nil
+
+	return filmsList[:10]
 }
 
 
