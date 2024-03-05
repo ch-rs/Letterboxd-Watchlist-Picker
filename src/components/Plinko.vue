@@ -1,6 +1,12 @@
 <template>
     <div @click="dropBall">
-        <div ref="myCanvas"></div>
+        <div class="parent" ref="myCanvas">
+            <div v-if="movies" class="images">
+                <div v-for="movie in movies" class="image">
+                    <img :src="movie.image_url" />
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -22,8 +28,8 @@ let sketch = function (p, parent) {
         particleSize = 10,
         movies = [],
         slotWidth,
-        imageObjects = [],
         stopped = false,
+        dings,
         plinkoSize = 14;
 
     p.setup = function () {
@@ -34,8 +40,16 @@ let sketch = function (p, parent) {
         world = engine.world;
         world.gravity.y = 2;
 
+        dings = [
+            p.loadSound("/ding1.mp3"),
+            p.loadSound("/ding2.mp3"),
+            p.loadSound("/ding3.mp3"),
+            p.loadSound("/ding4.mp3"),
+        ];
+
         spacing = p.width / cols;
 
+        /*
         Matter.Events.on(engine, "afterUpdate", function () {
             for (let i = 0; i < particles.length; i++) {
                 // Check if the particle's speed is close to zero
@@ -44,48 +58,36 @@ let sketch = function (p, parent) {
                 }
             }
         });
+        */
+
+        Matter.Events.on(engine, "collisionStart", function (event) {
+            for (let i = 0; i < event.pairs.length; i++) {
+                const pair = event.pairs[i];
+                if (
+                    (pair.bodyA.label === "particle" &&
+                        pair.bodyB.label === "plinko") ||
+                    (pair.bodyA.label === "plinko" &&
+                        pair.bodyB.label === "particle")
+                ) {
+                    const ding =
+                        dings[Math.floor(Math.random() * dings.length)];
+                    ding.play();
+                }
+            }
+        });
     };
 
     p.populate = function (newMovies) {
         movies = newMovies;
-        for (let i = 0; i < movies.length; i++) {
-            const x = slotWidth * (i + 1) - slotWidth;
-
-            // Create a new ImageObject at the calculated position
-            const obj = new ImageObject(
-                x,
-                p.height - 100,
-                movies[i].image_url,
-                slotWidth,
-            );
-
-            imageObjects.push(obj);
-        }
 
         // Calculate the width of each slot
         slotWidth = p.width / movies.length;
 
-        p.createBoundaries();
-        p.createPlinkos();
-        p.populate();
+        setTimeout(() => {
+            p.createBoundaries();
+            p.createPlinkos();
+        }, 3000);
     };
-
-    function ImageObject(x, y, imageUrl, slotWidth) {
-        this.x = x;
-        this.y = y;
-        this.image = p.loadImage(imageUrl);
-
-        this.show = function () {
-            // Specify the width and height of the image
-            p.image(
-                this.image,
-                this.x,
-                this.y,
-                slotWidth,
-                (slotWidth * this.image.height) / this.image.width,
-            );
-        };
-    }
 
     p.newParticle = function () {
         const p = new Particle(random(100, 600), 0, particleSize);
@@ -121,12 +123,8 @@ let sketch = function (p, parent) {
     };
 
     p.draw = function () {
-        p.background(51);
+        p.background(21);
         Engine.update(engine);
-
-        for (let i = 0; i < imageObjects.length; i++) {
-            imageObjects[i].show();
-        }
 
         for (let i = 0; i < particles.length; i++) {
             particles[i].show();
@@ -159,6 +157,7 @@ let sketch = function (p, parent) {
         };
         x += random(-1, 1);
         this.body = Bodies.circle(x, y, r, options);
+        this.body.label = "particle";
         this.r = r;
         World.add(world, this.body);
     }
@@ -191,6 +190,7 @@ let sketch = function (p, parent) {
         };
         this.color = random(80, 175);
         this.body = Bodies.circle(x, y, r, options);
+        this.body.label = "plinko";
         this.r = r;
         World.add(world, this.body);
     }
@@ -265,5 +265,25 @@ canvas {
     width: 100vw;
     height: auto;
     margin-block-start: 3em;
+}
+
+.images {
+    position: absolute;
+    top: calc(100% - 10px);
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: flex;
+}
+
+.parent {
+    position: relative;
+    width: fit-content;
+    margin: auto;
+}
+
+.image img {
+    width: 100%;
+    height: auto;
 }
 </style>

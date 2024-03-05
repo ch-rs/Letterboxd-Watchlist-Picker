@@ -12,11 +12,12 @@
             </search-bar>
 
             <section id="film-results" aria-live="polite" :aria-busy="loading">
+                <plinko :movies="testMovies"></plinko>
                 <loading-bar v-if="loading" />
                 <div v-else-if="submitted">
                     <not-found v-if="notFound" :status="notFoundStatus" />
                     <div v-else>
-                        <plinko v-if="movies.length" :movies="movies"></plinko>
+                        <!--<plinko v-if="movies.length" :movies="movies"></plinko>-->
                     </div>
 
                     <!--
@@ -65,6 +66,27 @@ export default {
             advancedOptions: {}, // advanced option settings
 
             movies: [], // list of movies to display
+
+            testMovies: [
+                {
+                    title: "The Shawshank Redemption",
+                    url: "https://www.imdb.com/title/tt0111161/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Godfather",
+                    url: "https://www.imdb.com/title/tt0068646/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Dark Knight",
+                    url: "https://www.imdb.com/title/tt0468569/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+            ],
 
             info: "", // json blob from AJAX request
             currentHash: null, // track most recent request
