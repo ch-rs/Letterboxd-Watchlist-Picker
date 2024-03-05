@@ -17,7 +17,10 @@
                 <div v-else-if="submitted">
                     <not-found v-if="notFound" :status="notFoundStatus" />
                     <div v-else>
-                        <plinko v-if="movies.length" :movies="movies"></plinko>
+                        <plinko
+                            v-if="movies && movies.length"
+                            :movies="movies"
+                        ></plinko>
                     </div>
 
                     <!--

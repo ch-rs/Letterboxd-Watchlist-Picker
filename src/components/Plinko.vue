@@ -26,7 +26,6 @@ let sketch = function (p, parent) {
         spacing,
         rows = 9,
         particleSize = 10,
-        movies = [],
         slotWidth,
         stopped = false,
         dings,
@@ -78,13 +77,13 @@ let sketch = function (p, parent) {
     };
 
     p.populate = function (newMovies) {
-        movies = newMovies;
-
         // Calculate the width of each slot
-        slotWidth = p.width / movies.length;
+        setTimeout(() => {
+            slotWidth = p.width / newMovies.length;
 
-        p.createBoundaries();
-        p.createPlinkos();
+            p.createPlinkos();
+            p.createBoundaries();
+        }, 1000);
     };
 
     p.newParticle = function () {
@@ -215,6 +214,7 @@ let sketch = function (p, parent) {
             isStatic: true,
         };
         this.body = Bodies.rectangle(x, y, w, h, options);
+        this.body.label = "boundary";
         this.w = w;
         this.h = h;
         World.add(world, this.body);
@@ -253,7 +253,13 @@ export default {
     },
     mounted() {
         this.myp5 = new p5(sketch, this.$refs.myCanvas);
-        this.myp5.populate(this.movies);
+        // Wait for movies to have length
+        this.$watch(
+            () => this.movies && this.movies.length,
+            () => {
+                this.myp5.populate(this.movies);
+            },
+        );
     },
 };
 </script>
