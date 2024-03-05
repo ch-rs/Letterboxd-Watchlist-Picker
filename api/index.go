@@ -220,11 +220,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) (film, erro
 
 	rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
 
-	if strings.Contains(finalFilm.Image, "https://s.ltrbxd.com/static/img/empty-poster") {
-		finalFilm.Image = "https://watchlistpicker.com/noimagefound.jpg"
-	}
-
-	return filmsList[:10]
+	return filmList[:10]
 }
 
 
