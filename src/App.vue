@@ -64,6 +64,8 @@ export default {
             users: "", // list of users to search
             advancedOptions: {}, // advanced option settings
 
+            movies: [], // list of movies to display
+
             info: "", // json blob from AJAX request
             currentHash: null, // track most recent request
 
@@ -214,8 +216,8 @@ export default {
                             var pre_image = new Image();
                             pre_image.src = json.image_url;
                         }
-
-                        vue.info = json;
+                        console.log(json);
+                        vue.movies = JSON.parse(json);
                     });
             } catch (e) {
                 alert(
@@ -248,9 +250,6 @@ export default {
         },
     },
     computed: {
-        movies: function () {
-            return this.info.length ? JSON.parse(this.info) : [];
-        },
         notFoundStatus: function () {
             if (this.emptyintersect) {
                 return "no-intersect";
