@@ -15,7 +15,10 @@
                 <loading-bar v-if="loading" />
                 <div v-else-if="submitted">
                     <not-found v-if="notFound" :status="notFoundStatus" />
-                    <plinko v-else :movies="movies"></plinko>
+                    <div v-else>
+                        <plinko v-if="movies.length" :movies="movies"></plinko>
+                    </div>
+
                     <!--
                     <film-result
                         v-else
@@ -245,18 +248,9 @@ export default {
         },
     },
     computed: {
-        title: function () {
-            return this.info.film_name;
+        movies: function () {
+            return this.info.length ? JSON.parse(this.info) : [];
         },
-
-        url: function () {
-            return this.info.slug;
-        },
-
-        imgUrl: function () {
-            return this.info.image_url;
-        },
-
         notFoundStatus: function () {
             if (this.emptyintersect) {
                 return "no-intersect";

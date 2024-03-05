@@ -255,7 +255,7 @@ export default {
     },
     mounted() {
         this.myp5 = new p5(sketch, this.$refs.myCanvas);
-        this.myp5.populate(this.props.movies);
+        this.myp5.populate(this.movies);
     },
 };
 </script>
