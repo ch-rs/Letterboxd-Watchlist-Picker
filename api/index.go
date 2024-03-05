@@ -112,7 +112,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println(ignoreing)
 
-	var userFilm film
+	var userFilm []film
 	var err error
 	
 	if inter {
@@ -148,7 +148,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 
 //main scraping function
-func scrapeMain(users []string, intersect bool, ignoreList toIgnore) (film, error) {
+func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, error) {
 	var user int = 0          //conuter for number of users increses by one when a users page starts being scraped decreses when user has finished think kinda like a semaphore
 	var totalFilms []film     //final list to hold all film
 	ch := make(chan filmSend) //channel to send films over
@@ -193,16 +193,17 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) (film, erro
 
 	//chose random film from list
 	if len(totalFilms) == 0 {
-		return film{}, &nothingError{reason: UNION}
+		// Return empty film list and error
+		return nil, &nothingError{reason: UNION}
 	}
 	log.Print("results")
-	var finalFilm film
+
 	var filmList []film
 	if intersect {
 		intersectList := getintersect(totalFilms,len(users))
 		length := len(intersectList)
 		if length == 0 {
-			return film{}, &nothingError{reason: INTERSECT}
+			return nil, &nothingError{reason: INTERSECT}
 		}
 		filmList = intersectList
 	} else {
@@ -220,7 +221,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) (film, erro
 
 	rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
 
-	return filmList[:10]
+	return filmList[:10], nil
 }
 
 
