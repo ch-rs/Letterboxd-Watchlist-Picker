@@ -83,10 +83,8 @@ let sketch = function (p, parent) {
         // Calculate the width of each slot
         slotWidth = p.width / movies.length;
 
-        setTimeout(() => {
-            p.createBoundaries();
-            p.createPlinkos();
-        }, 3000);
+        p.createBoundaries();
+        p.createPlinkos();
     };
 
     p.newParticle = function () {
