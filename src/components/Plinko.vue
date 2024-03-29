@@ -61,6 +61,8 @@ let sketch = function (p, parent) {
     };
 
     p.populate = function (newMovies) {
+        this.cols = newMovies.length;
+
         // Calculate the width of each slot
         setTimeout(() => {
             slotWidth = p.width / newMovies.length;
