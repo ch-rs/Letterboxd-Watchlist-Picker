@@ -221,7 +221,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 
 	rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
 
-	return filmList[:10], nil
+	return filmList[:20], nil
 }
 
 
