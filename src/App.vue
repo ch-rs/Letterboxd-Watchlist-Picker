@@ -1,7 +1,6 @@
 <template>
     <div v-focus-visible>
         <header>
-            <logo />
             <darkmode-switch />
         </header>
         <main>
@@ -17,10 +16,7 @@
                 <div v-else-if="submitted">
                     <not-found v-if="notFound" :status="notFoundStatus" />
                     <div v-else>
-                        <plinko
-                            v-if="movies && movies.length"
-                            :movies="movies"
-                        ></plinko>
+                        <plinko v-if="movies && movies.length" :movies="movies"></plinko>
                     </div>
 
                     <!--
@@ -193,6 +189,14 @@ export default {
                 let vue = this;
                 let hash = this.hashCode(apiUrl);
                 console.log("url: " + apiUrl + "\nhash: " + hash);
+
+                // If localhost, use dummy data on this comoonent
+                if (window.location.hostname == "localhost") {
+                    this.loading = false;
+                    this.movies = [...this.movies, ...this.movies, ...this.movies];
+                    return;
+                }
+
                 vue.currentHash = hash;
                 fetch(apiUrl)
                     .then(function (res) {
@@ -244,7 +248,7 @@ export default {
             } catch (e) {
                 alert(
                     "Something went wrong. Please try again in a moment. Error:" +
-                        e,
+                    e,
                     "An error occured",
                 );
             }

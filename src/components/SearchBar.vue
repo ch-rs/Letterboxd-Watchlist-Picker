@@ -14,8 +14,6 @@
             <button v-on:click="action()">Submit</button>
         </div>
 
-        <button v-on:click="beep()">Test beep</button>
-
         <slot />
     </section>
 </template>

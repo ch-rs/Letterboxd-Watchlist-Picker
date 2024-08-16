@@ -1,5 +1,6 @@
 <template>
-    <div @click="dropBall">
+    <div>
+        <button class="drop" @click="dropBall">Drop!</button>
         <div class="parent" ref="myCanvas">
             <div v-if="movies" class="images">
                 <div v-for="movie in movies" class="image">
@@ -11,6 +12,8 @@
 </template>
 
 <script>
+import ding from '../utils/ding';
+
 const random = Matter.Common.random;
 const Engine = Matter.Engine;
 const World = Matter.World;
@@ -24,29 +27,53 @@ let sketch = function (p, parent) {
         bounds = [],
         cols = 11,
         spacing,
-        rows = 9,
-        particleSize = 10,
+        rows = 12,
+        particleSize = 13,
         slotWidth,
         stopped = false,
         dings,
         plinkoSize = 14;
 
     p.setup = function () {
-        const c = p.createCanvas(612, 700);
+        const c = p.createCanvas(612, 1000);
         c.parent(parent);
 
         engine = Engine.create();
         world = engine.world;
         world.gravity.y = 2;
 
-        dings = [
-            p.loadSound("/ding1.mp3"),
-            p.loadSound("/ding2.mp3"),
-            p.loadSound("/ding3.mp3"),
-            p.loadSound("/ding4.mp3"),
-        ];
-
         spacing = p.width / cols;
+
+        Matter.Events.on(engine, "collisionStart", function (event) {
+            for (let i = 0; i < event.pairs.length; i++) {
+                let pair = event.pairs[i];
+                let velocityA = pair.bodyA.velocity;
+                let velocityB = pair.bodyB.velocity;
+
+                console.log(`Velocity of bodyA: x=${velocityA.x}, y=${velocityA.y}`);
+                console.log(`Velocity of bodyB: x=${velocityB.x}, y=${velocityB.y}`);
+
+                // Calculate the magnitude of the velocities
+                let speedA = Math.sqrt(velocityA.x * velocityA.x + velocityA.y * velocityA.y);
+                let speedB = Math.sqrt(velocityB.x * velocityB.x + velocityB.y * velocityB.y);
+
+                // Use the maximum speed of the two bodies for the ding function
+                let maxSpeed = Math.max(speedA, speedB);
+
+                let vCeiling = Math.min(maxSpeed / 10, 0.9);
+                let v = Math.max(vCeiling, 0.3);
+
+                let frequency = 500;
+                if (pair.bodyA.label === 'plinko') {
+                    frequency = pair.bodyA.frequency;
+                } else if (pair.bodyB.label === 'plinko') {
+                    frequency = pair.bodyB.frequency;
+                }
+
+                // Call the ding function with the velocity-based volume and frequency
+                ding(v, frequency);
+            }
+        });
 
         /*
         Matter.Events.on(engine, "afterUpdate", function () {
@@ -70,27 +97,11 @@ let sketch = function (p, parent) {
             p.createPlinkos();
             p.createBoundaries();
         }, 1000);
-
-        Matter.Events.on(engine, "collisionStart", function (event) {
-            for (let i = 0; i < event.pairs.length; i++) {
-                const pair = event.pairs[i];
-                if (
-                    (pair.bodyA.label === "particle" &&
-                        pair.bodyB.label === "plinko") ||
-                    (pair.bodyA.label === "plinko" &&
-                        pair.bodyB.label === "particle")
-                ) {
-                    const ding =
-                        dings[Math.floor(Math.random() * dings.length)];
-                    ding.play();
-                }
-            }
-        });
     };
 
     p.newParticle = function () {
-        const p = new Particle(random(100, 600), 0, particleSize);
-        particles.push(p);
+        const part = new Particle(random(5, p.width - 5), 0, particleSize);
+        particles.push(part);
     };
 
     p.createBoundaries = function () {
@@ -99,8 +110,8 @@ let sketch = function (p, parent) {
 
         for (let i = 0; i < cols + 1; i++) {
             const x = i * slotWidth;
-            const h = 100;
-            const w = 10;
+            const h = 60;
+            const w = 5;
             const y = p.height - h / 2;
             b = new Boundary(x, y, w, h);
             bounds.push(b);
@@ -115,7 +126,7 @@ let sketch = function (p, parent) {
                     x += spacing / 2;
                 }
                 const y = spacing + j * spacing;
-                const p = new Plinko(x, y, plinkoSize);
+                const p = new Plinko(x, y, plinkoSize + (Math.random() * 5 - 2.5));
                 plinkos.push(p);
             }
         }
@@ -127,16 +138,7 @@ let sketch = function (p, parent) {
 
         for (let i = 0; i < particles.length; i++) {
             particles[i].show();
-            if (particles[i].isOffScreen()) {
-                // If left side, move to right
-                if (particles[i].body.position.x < 0) {
-                    particles[i].body.position.x = p.width;
-                }
-                // If right side, move to left
-                if (particles[i].body.position.x > p.width) {
-                    particles[i].body.position.x = 0;
-                }
-            }
+            particles[i].isOffScreen()
         }
 
         for (let i = 0; i < plinkos.length; i++) {
@@ -148,32 +150,46 @@ let sketch = function (p, parent) {
         }
     };
 
-    function Particle(x, y, r) {
+    function Particle(x, y, rad) {
         this.r = 255;
         this.g = 255;
         this.b = 255;
+
         const options = {
             isStatic: false,
             mass: 0,
             density: 1,
-            restitution: 0.5,
+            restitution: 1,
             friction: 1,
         };
-        x += random(-1, 1);
-        this.body = Bodies.circle(x, y, r, options);
+
+        this.body = Bodies.circle(x, y, rad, options);
         this.body.label = "particle";
-        this.r = r;
+        this.r = rad;
+        this.color = [255, 255, 255];
+
         World.add(world, this.body);
     }
 
     Particle.prototype.isOffScreen = function () {
         const { x, y } = this.body.position;
-        return x < -50 || x > p.width + 50 || y > p.height + 50;
+
+        if (x < 0) {
+            Matter.Body.setPosition(this.body, { x: p.width, y });
+        } else if (x > p.width) {
+            Matter.Body.setPosition(this.body, { x: 0, y });
+        }
+
+        if (y > p.height) {
+            return true;
+        }
+
+        return false;
     };
 
     Particle.prototype.show = function () {
         p.noStroke();
-        p.fill(this.r, this.g, this.b);
+        p.fill(255, 255, 255);
         const pos = this.body.position;
         p.push();
         p.translate(pos.x, pos.y);
@@ -192,9 +208,10 @@ let sketch = function (p, parent) {
             restitution: 1,
             friction: 0,
         };
-        this.color = random(80, 175);
+        this.color = [random(80, 225), random(80, 225), random(80, 225)];
         this.body = Bodies.circle(x, y, r, options);
         this.body.label = "plinko";
+        this.body.frequency = (Math.random() * 300) + (y * 0.5);
         this.r = r;
         World.add(world, this.body);
     }
@@ -218,7 +235,7 @@ let sketch = function (p, parent) {
         const options = {
             density: 1,
             friction: 1,
-            isStatic: true,
+            isStatic: true
         };
         this.body = Bodies.rectangle(x, y, w, h, options);
         this.body.label = "boundary";
@@ -276,10 +293,11 @@ canvas {
 .images {
     position: absolute;
     top: calc(100% - 10px);
-    left: 0;
+    left: -1px;
     width: 100%;
     height: auto;
     display: flex;
+    background: #808080;
 }
 
 .parent {
@@ -289,7 +307,27 @@ canvas {
 }
 
 .image img {
-    width: 100%;
+    width: calc(100% - 5px);
     height: auto;
+    margin-inline: 2.5px;
+    object-fit: cover
+}
+
+.drop {
+    margin-block-start: 2em;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    background: #000;
+    color: #fff;
+    display: inline-flex;
+    border: 0;
+    max-width: 500px;
+    padding: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    font-size: 1.5em;
+    justify-content: center;
 }
 </style>
