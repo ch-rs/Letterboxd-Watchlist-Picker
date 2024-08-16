@@ -19,12 +19,15 @@
                 v-on:input="updateValue($event.target.value)"
             />
             <button v-on:click="action()">Submit</button>
+            <button v-on:click="beep()">Test beep</button>
         </div>
         <slot />
     </section>
 </template>
 
 <script>
+import ding from '../utils/ding';
+
 export default {
     name: "SearchBar",
     props: ["value", "action"],
@@ -35,6 +38,9 @@ export default {
         setValue: function (value) {
             this.value = value;
         },
+        beep: function () {
+            ding(Math.random(), Math.random() * 500);
+        }
     },
 };
 </script>
