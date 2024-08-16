@@ -31,6 +31,7 @@ let sketch = function (p, parent) {
         rows = 15,
         particleSize = 12,
         slotWidth,
+        alerted = false,
         plinkoSize = 14;
 
     p.setup = function () {
@@ -100,6 +101,7 @@ let sketch = function (p, parent) {
     };
 
     p.newParticle = function () {
+        alerted = false
         const part = new Particle(random(5, p.width - 5), 0, particleSize);
         particles.push(part);
     };
@@ -156,13 +158,17 @@ let sketch = function (p, parent) {
                 const segmentIndex = this.getSegmentIndex(particles[i]);
                 console.log(segmentIndex)
                 console.log(`Particle stopped in segment: ${segmentIndex}`);
+                console.log(p.movies[segmentIndex]);
                 setTimeout(() => {
-                    alert(`You will watch ${p.movies[segmentIndex].title}`);
+                    if (!alerted) {
+                        alert(`You will watch ${p.movies[segmentIndex].title}`);
+                    }
+                    alerted = true;
+
                    // Remove the particle from the world
-                    World.remove(world, particles[i].body);
                     particles.splice(i, 1);
                     i--;
-                }, 3000);
+                }, 1000);
             }
         }
 
