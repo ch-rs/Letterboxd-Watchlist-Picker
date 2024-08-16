@@ -25,12 +25,12 @@ let sketch = function (p, parent) {
         particles = [],
         plinkos = [],
         bounds = [],
+        movies = [],
         cols = 11,
         spacing,
         rows = 15,
         particleSize = 12,
         slotWidth,
-        stopped = false,
         plinkoSize = 14;
 
     p.setup = function () {
@@ -88,6 +88,7 @@ let sketch = function (p, parent) {
 
     p.populate = function (newMovies) {
         cols = newMovies.length;
+        p.movies = newMovies;
 
         // Calculate the width of each slot
         setTimeout(() => {
@@ -131,6 +132,18 @@ let sketch = function (p, parent) {
         }
     };
 
+    p.checkIfStopped = function (particle) {
+        const velocity = particle.body.velocity;
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        return speed < 0.005; // Threshold for considering the particle as stopped
+    }
+
+    p.getSegmentIndex = function (particle) {
+        let sw = p.width / cols;
+        const x = particle.body.position.x;
+        return Math.floor(x / sw);
+    }
+
     p.draw = function () {
         p.background(21);
         Engine.update(engine);
@@ -138,6 +151,19 @@ let sketch = function (p, parent) {
         for (let i = 0; i < particles.length; i++) {
             particles[i].show();
             particles[i].isOffScreen()
+
+            if (p.movies.length && this.checkIfStopped(particles[i])) {
+                const segmentIndex = this.getSegmentIndex(particles[i]);
+                console.log(segmentIndex)
+                console.log(`Particle stopped in segment: ${segmentIndex}`);
+                setTimeout(() => {
+                    alert(`You will watch ${p.movies[segmentIndex].title}`);
+                   // Remove the particle from the world
+                    World.remove(world, particles[i].body);
+                    particles.splice(i, 1);
+                    i--;
+                }, 3000);
+            }
         }
 
         for (let i = 0; i < plinkos.length; i++) {
