@@ -27,15 +27,14 @@ let sketch = function (p, parent) {
         bounds = [],
         cols = 11,
         spacing,
-        rows = 12,
-        particleSize = 13,
+        rows = 13,
+        particleSize = 12,
         slotWidth,
         stopped = false,
-        dings,
         plinkoSize = 14;
 
     p.setup = function () {
-        const c = p.createCanvas(612, 1000);
+        const c = p.createCanvas(612, 1100);
         c.parent(parent);
 
         engine = Engine.create();
@@ -208,7 +207,7 @@ let sketch = function (p, parent) {
             restitution: 1,
             friction: 0,
         };
-        this.color = [random(80, 225), random(80, 225), random(80, 225)];
+        this.color = [random(80, 150), random(80, 150), random(80, 150)];
         this.body = Bodies.circle(x, y, r, options);
         this.body.label = "plinko";
         this.body.frequency = (Math.random() * 300) + (y * 0.5);
