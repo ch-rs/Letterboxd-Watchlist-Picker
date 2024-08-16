@@ -27,7 +27,7 @@ let sketch = function (p, parent) {
         bounds = [],
         cols = 11,
         spacing,
-        rows = 15
+        rows = 15,
         particleSize = 12,
         slotWidth,
         stopped = false,
