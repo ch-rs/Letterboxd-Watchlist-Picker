@@ -128,9 +128,14 @@ let sketch = function (p, parent) {
         for (let i = 0; i < particles.length; i++) {
             particles[i].show();
             if (particles[i].isOffScreen()) {
-                World.remove(world, particles[i].body);
-                particles.splice(i, 1);
-                i--;
+                // If left side, move to right
+                if (particles[i].body.position.x < 0) {
+                    particles[i].body.position.x = p.width;
+                }
+                // If right side, move to left
+                if (particles[i].body.position.x > p.width) {
+                    particles[i].body.position.x = 0;
+                }
             }
         }
 

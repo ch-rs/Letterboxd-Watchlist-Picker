@@ -9,18 +9,13 @@
         </div>
 
         <div class="form-container">
-            <input
-                id="userbox"
-                class="userfield"
-                type="text"
-                placeholder="ex: holopollock, qjack"
-                :value="value"
-                v-on:keyup.enter="action()"
-                v-on:input="updateValue($event.target.value)"
-            />
+            <input id="userbox" class="userfield" type="text" placeholder="ex: holopollock, qjack" :value="value"
+                v-on:keyup.enter="action()" v-on:input="updateValue($event.target.value)" />
             <button v-on:click="action()">Submit</button>
-            <button v-on:click="beep()">Test beep</button>
         </div>
+
+        <button v-on:click="beep()">Test beep</button>
+
         <slot />
     </section>
 </template>
@@ -39,7 +34,7 @@ export default {
             this.value = value;
         },
         beep: function () {
-            ding(Math.random(), Math.random() * 500);
+            ding(Math.max(Math.random(), 0.3), Math.random() * 500);
         }
     },
 };
@@ -113,7 +108,8 @@ button {
     outline: none;
 
     background: var(--secondary);
-    transition: background-color ease-in-out 0.2s; /* darkmode transition */
+    transition: background-color ease-in-out 0.2s;
+    /* darkmode transition */
 }
 
 .dark button {
