@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
+//	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
