@@ -274,7 +274,7 @@ func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
 
 	ajc := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-film-name")
@@ -290,7 +290,7 @@ func scrape(url string, ch chan filmSend) {
 		ch <- ok(tempfilm)
 	})
 	c := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
@@ -318,7 +318,7 @@ func scrape(url string, ch chan filmSend) {
 func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own function
 	siteToVisit := url
 	ajc := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	extensions.RandomUserAgent(ajc)
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
@@ -338,7 +338,7 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 	})
 
 	c := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	extensions.RandomUserAgent(c)
