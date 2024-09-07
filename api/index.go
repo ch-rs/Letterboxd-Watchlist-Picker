@@ -22,7 +22,7 @@ type film struct {
 	Year  string `json:"release_year"`
 	Name  string `json:"film_name"`
 	Length string `json:"film_length"`
-	Priority string `json:"priority"`
+	Priority int `json:"priority"`
 }
 
 //struct for channel to send film and whether is has finshed a user
