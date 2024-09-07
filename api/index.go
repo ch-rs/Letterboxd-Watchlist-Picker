@@ -278,23 +278,21 @@ func scrape(url string, ch chan filmSend) {
 		colly.Async(false),
 	)
 
-	count := 0
-
-	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
-		name := e.Attr("data-film-name")
-		slug := e.Attr("data-film-link")
+	ajc.OnHTML("div.poster-container", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
+		name := e.ChildAttr(".poster", "data-film-name")
+		slug := e.ChildAttr(".poster", "data-film-link")
 		img := e.ChildAttr("img", "src")
-		year := e.Attr("data-film-release-year")
+		year := e.ChildAttr(".poster", "data-film-release-year")
+
+		index := e.Index
 
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBigger(img),
 			Year: year,
 			Name:  name,
-			Priority: count,
+			Priority: index,
 		}
-
-		count++
 
 		ch <- ok(tempfilm)
 	})
