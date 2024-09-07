@@ -260,10 +260,10 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 	listname := strings.ToLower(listNameIn)
 
 	if strings.Contains(listname, "/list/") {
-		url = site + "/" + listname
+		url = site + "/" + listname + "/detail"
 	} else {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
-		url = site + "/" + strslice[0] + "/list/" + strslice[1]
+		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/detail"
 
 	}
 	scrape(url, ch)
@@ -276,11 +276,11 @@ func scrape(url string, ch chan filmSend) {
 	ajc := colly.NewCollector(
 		colly.Async(false),
 	)
-	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
-		name := e.Attr("data-film-name")
-		slug := e.Attr("data-film-link")
+	ajc.OnHTML("li.film-detail", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
+		name := e.ChildAttr("div.poster", "data-film-name")
+		slug := e.ChildAttr("div.poster", "data-film-link")
 		img := e.ChildAttr("img", "src")
-		year := e.Attr("data-film-release-year")
+		year := e.ChildAttr("div.poster", "data-film-release-year")
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBigger(img),
@@ -293,12 +293,11 @@ func scrape(url string, ch chan filmSend) {
 		colly.Async(false),
 	)
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
-	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
-		e.ForEach("div.film-poster", func(i int, ein *colly.HTMLElement) {
+	c.OnHTML("ul.poster-list", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
+		e.ForEach("li.film-detail div.film-poster", func(i int, ein *colly.HTMLElement) {
 			slug := ein.Attr("data-target-link")
 			ajc.Visit(urlscrape + slug + urlEnd) //start go routine to collect all film data
 		})
-
 	})
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
