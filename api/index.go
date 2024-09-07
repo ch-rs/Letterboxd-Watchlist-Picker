@@ -275,10 +275,10 @@ func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
 
 	ajc := colly.NewCollector(
-		colly.Async(false),
+		colly.Async(true),
 	)
 
-	ajc.OnHTML("div.poster-container", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
+	ajc.OnHTML("li.poster-container", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.ChildAttr(".poster", "data-film-name")
 		slug := e.ChildAttr(".poster", "data-film-link")
 		img := e.ChildAttr("img", "src")
