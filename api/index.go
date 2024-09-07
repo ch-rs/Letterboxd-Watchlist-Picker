@@ -275,7 +275,7 @@ func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
 
 	ajc := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 
 	count := 0
