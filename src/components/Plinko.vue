@@ -93,7 +93,13 @@ let sketch = function (p, parent) {
 
         // Calculate the width of each slot
         setTimeout(() => {
+
             slotWidth = p.width / newMovies.length;
+
+            // Loop through p.movies give each an X position based on priority value
+            for (let i = 0; i < p.movies.length; i++) {
+                p.movies[i].x = i * slotWidth;
+            }
 
             p.createPlinkos();
             p.createBoundaries();
