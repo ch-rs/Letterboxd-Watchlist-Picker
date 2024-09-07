@@ -278,22 +278,24 @@ func scrape(url string, ch chan filmSend) {
 		colly.Async(true),
 	)
 
+	count := 0
+
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
 		img := e.ChildAttr("img", "src")
 		year := e.Attr("data-film-release-year")
 
-		// Get index of this element
-		index := e.Index
-
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBigger(img),
 			Year: year,
 			Name:  name,
-			Priority: index,
+			Priority: count,
 		}
+
+		count++
+
 		ch <- ok(tempfilm)
 	})
 	c := colly.NewCollector(
@@ -328,21 +330,27 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		colly.Async(true),
 	)
 	extensions.RandomUserAgent(ajc)
+
+	count := 0
+
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
 		slug := e.ChildAttr("div.film-poster","data-film-link")
 		img := e.ChildAttr("img", "src")
 		year := e.ChildAttr("div.film-poster","data-film-release-year")
 		lenght := e.ChildText("p.text-footer")
-		index := e.Index
+
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
-			Priority: index,
+			Priority: count,
 		}
+
+		count++
+
 		ch <- ok(tempfilm)
 	})
 
