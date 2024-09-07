@@ -22,7 +22,6 @@ type film struct {
 	Year  string `json:"release_year"`
 	Name  string `json:"film_name"`
 	Length string `json:"film_length"`
-	Priority int `json:"priority"`
 }
 
 //struct for channel to send film and whether is has finshed a user
@@ -166,7 +165,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 				}
 			} else {
 				if ignoreList.short || ignoreList.feature {
-					go scrapeList(a, ch)
+					go scrapeListWithLength(a, ch)
 				} else {
 					go scrapeList(a, ch)
 				}
@@ -220,7 +219,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 		filmList = ignoreFeature(filmList)
 	}
 
-	rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
+	//rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
 
 	numFilms := len(filmList)
 	if numFilms > 20 {
@@ -277,41 +276,30 @@ func scrape(url string, ch chan filmSend) {
 	ajc := colly.NewCollector(
 		colly.Async(true),
 	)
-
-	ajc.OnHTML("li.poster-container", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
-		index := e.Index
-
-		e.ForEach("div.poster", func(i int, ein *colly.HTMLElement) {
-			name := ein.Attr("data-film-name")
-			slug := ein.Attr("data-film-link")
-			img := ein.ChildAttr("img", "src")
-			year := ein.Attr("data-film-release-year")
-
-			tempfilm := film{
-				Slug:  (site + slug),
-				Image: makeBigger(img),
-				Year: year,
-				Name:  name,
-				Priority: index,
-			}
-
-			ch <- ok(tempfilm)
-		})
+	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
+		name := e.Attr("data-film-name")
+		slug := e.Attr("data-film-link")
+		img := e.ChildAttr("img", "src")
+		year := e.Attr("data-film-release-year")
+		tempfilm := film{
+			Slug:  (site + slug),
+			Image: makeBigger(img),
+			Year: year,
+			Name:  name,
+		}
+		ch <- ok(tempfilm)
 	})
-
 	c := colly.NewCollector(
 		colly.Async(true),
 	)
-
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
-
-	c.OnHTML("div.poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
+	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
 		e.ForEach("div.film-poster", func(i int, ein *colly.HTMLElement) {
 			slug := ein.Attr("data-target-link")
 			ajc.Visit(urlscrape + slug + urlEnd) //start go routine to collect all film data
 		})
-	})
 
+	})
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
 		if strings.Contains(link, "/page") {
@@ -333,27 +321,19 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		colly.Async(true),
 	)
 	extensions.RandomUserAgent(ajc)
-
-	count := 0
-
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
 		slug := e.ChildAttr("div.film-poster","data-film-link")
 		img := e.ChildAttr("img", "src")
 		year := e.ChildAttr("div.film-poster","data-film-release-year")
 		lenght := e.ChildText("p.text-footer")
-
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
-			Priority: count,
 		}
-
-		count++
-
 		ch <- ok(tempfilm)
 	})
 
