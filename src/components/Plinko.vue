@@ -154,6 +154,7 @@ let sketch = function (p, parent) {
             particles[i].show();
             particles[i].isOffScreen()
 
+                            /*
             if (p.movies.length && this.checkIfStopped(particles[i])) {
                 const segmentIndex = this.getSegmentIndex(particles[i]);
                 console.log(segmentIndex)
@@ -170,6 +171,7 @@ let sketch = function (p, parent) {
                     i--;
                 }, 1000);
             }
+                            */
         }
 
         for (let i = 0; i < plinkos.length; i++) {
@@ -300,6 +302,10 @@ export default {
             type: Array,
             required: true,
         },
+        advancedOptions: {
+            type: Object,
+            required: true
+        }
     },
     methods: {
         dropBall() {

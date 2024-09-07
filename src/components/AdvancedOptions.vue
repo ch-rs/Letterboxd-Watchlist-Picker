@@ -4,6 +4,15 @@
 			Advanced Options
 		</button>
 		<div id="collapsable">
+			<div>
+				<input type="checkbox" id="relative" value="Relative" name="relative" v-model="relative" v-on:change="updateValues()" checked />
+				<label for="relative" class="relative-label">
+					Prioritise older movies
+				</label>
+			</div>
+
+			<br />
+
 			<input
 				type="radio"
 				id="union"
@@ -123,6 +132,7 @@
 		data()
 		{
 			return {
+				relative: true,
 				selectionMode: "Union",
 				unreleased: true,
 				shortFilms: true,
@@ -153,6 +163,11 @@
 				{
 					this.featureLength = this.value['featureLength'];
 				}
+
+				if ('relative' in this.value)
+				{
+					this.relative = this.value['relative'];
+				}
 			}
 
 			this.updateValues()
@@ -174,6 +189,7 @@
 					document.getElementById("ignore-unreleased").tabIndex = -1;
 					document.getElementById("ignore-short").tabIndex = -1;
 					document.getElementById("ignore-feature").tabIndex = -1;
+					document.getElementById("relative").tabIndex = -1;
 					document.getElementById("advanced-section").setAttribute("ariaexpanded", "false");
 					this.advancedOpen = false;
 				}
@@ -184,6 +200,7 @@
 					document.getElementById("ignore-unreleased").tabIndex = 0;
 					document.getElementById("ignore-short").tabIndex = 0;
 					document.getElementById("ignore-feature").tabIndex = 0;
+					document.getElementById("relative").tabIndex = 0;
 					document.getElementById("advanced-section").setAttribute("ariaexpanded", "true");
 					this.advancedOpen = true;
 				}
@@ -193,6 +210,7 @@
 			{
 				this.$emit('input', {
 					'selectionMode': this.selectionMode,
+					'relative': this.relative,
 					'unreleased': this.unreleased,
 					'shortFilms': this.shortFilms,
 					'featureLength': this.featureLength

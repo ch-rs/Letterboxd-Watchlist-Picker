@@ -22,6 +22,7 @@ type film struct {
 	Year  string `json:"release_year"`
 	Name  string `json:"film_name"`
 	Length string `json:"film_length"`
+	Priority string `json:"priority"`
 }
 
 //struct for channel to send film and whether is has finshed a user
@@ -34,7 +35,7 @@ type toIgnore struct {
 	unreleased bool
 	short bool
 	feature bool
-} 
+}
 
 type nothingReason int
 
@@ -107,22 +108,22 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	ignore, _ := query["ignore"]
 	var ignoreing = toIgnore{}
 
-	if len(ignore) > 0 {  
+	if len(ignore) > 0 {
 		ignoreing = whatToIgnore(ignore[0])
 	}
 	log.Println(ignoreing)
 
 	var userFilm []film
 	var err error
-	
+
 	if inter {
 		if len(users) == 1 {
-			userFilm, err = scrapeMain(users, false, ignoreing) 
+			userFilm, err = scrapeMain(users, false, ignoreing)
 		} else {
-			userFilm, err = scrapeMain(users, true, ignoreing) 
+			userFilm, err = scrapeMain(users, true, ignoreing)
 		}
 	} else {
-		userFilm, err = scrapeMain(users, false, ignoreing) 
+		userFilm, err = scrapeMain(users, false, ignoreing)
 	}
 	if err != nil {
 		var e *nothingError
@@ -260,10 +261,10 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 	listname := strings.ToLower(listNameIn)
 
 	if strings.Contains(listname, "/list/") {
-		url = site + "/" + listname
+		url = site + "/" + listname + "/by/added-earliest/"
 	} else {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
-		url = site + "/" + strslice[0] + "/list/" + strslice[1]
+		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
 
 	}
 	scrape(url, ch)
@@ -281,11 +282,16 @@ func scrape(url string, ch chan filmSend) {
 		slug := e.Attr("data-film-link")
 		img := e.ChildAttr("img", "src")
 		year := e.Attr("data-film-release-year")
+
+		// Get index of this element
+		index := e.Index
+
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBigger(img),
 			Year: year,
 			Name:  name,
+			Priority: Index
 		}
 		ch <- ok(tempfilm)
 	})
@@ -327,12 +333,14 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		img := e.ChildAttr("img", "src")
 		year := e.ChildAttr("div.film-poster","data-film-release-year")
 		lenght := e.ChildText("p.text-footer")
+		index := e.Index
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
+			Priority: index
 		}
 		ch <- ok(tempfilm)
 	})
@@ -557,6 +565,3 @@ func whatToIgnore(ignoreString string) toIgnore {
 		feature: contains(ignoreList, "feature"),
 	}
 }
-
-
-
