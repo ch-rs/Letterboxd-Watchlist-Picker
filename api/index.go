@@ -166,7 +166,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 				}
 			} else {
 				if ignoreList.short || ignoreList.feature {
-					go scrapeListWithLength(a, ch)
+					go scrapeList(a, ch)
 				} else {
 					go scrapeList(a, ch)
 				}
@@ -279,34 +279,39 @@ func scrape(url string, ch chan filmSend) {
 	)
 
 	ajc.OnHTML("li.poster-container", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
-		name := e.ChildAttr(".poster", "data-film-name")
-		slug := e.ChildAttr(".poster", "data-film-link")
-		img := e.ChildAttr("img", "src")
-		year := e.ChildAttr(".poster", "data-film-release-year")
-
 		index := e.Index
 
-		tempfilm := film{
-			Slug:  (site + slug),
-			Image: makeBigger(img),
-			Year: year,
-			Name:  name,
-			Priority: index,
-		}
+		e.ForEach("div.poster", func(i int, ein *colly.HTMLElement) {
+			name := ein.Attr("data-film-name")
+			slug := ein.Attr("data-film-link")
+			img := ein.ChildAttr("img", "src")
+			year := ein.Attr("data-film-release-year")
 
-		ch <- ok(tempfilm)
+			tempfilm := film{
+				Slug:  (site + slug),
+				Image: makeBigger(img),
+				Year: year,
+				Name:  name,
+				Priority: index,
+			}
+
+			ch <- ok(tempfilm)
+		})
 	})
+
 	c := colly.NewCollector(
 		colly.Async(true),
 	)
+
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
-	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
+
+	c.OnHTML("div.poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
 		e.ForEach("div.film-poster", func(i int, ein *colly.HTMLElement) {
 			slug := ein.Attr("data-target-link")
 			ajc.Visit(urlscrape + slug + urlEnd) //start go routine to collect all film data
 		})
-
 	})
+
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
 		if strings.Contains(link, "/page") {
