@@ -247,10 +247,10 @@ func scrapeListWithLength(listNameIn string, ch chan filmSend) {
 	listname := strings.ToLower(listNameIn)
 
 	if strings.Contains(listname, "/list/") {
-		url = site + "/" + listname + "/by/added-earliest/"
+		url = site + "/" + listname
 	} else {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
-		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
+		url = site + "/" + strslice[0] + "/list/" + strslice[1]
 
 	}
 	scrapeWithLength(url, ch)
@@ -261,10 +261,10 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 	listname := strings.ToLower(listNameIn)
 
 	if strings.Contains(listname, "/list/") {
-		url = site + "/" + listname + "/by/added-earliest/"
+		url = site + "/" + listname
 	} else {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
-		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
+		url = site + "/" + strslice[0] + "/list/" + strslice[1]
 
 	}
 	scrape(url, ch)
