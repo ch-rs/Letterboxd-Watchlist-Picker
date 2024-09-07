@@ -277,6 +277,10 @@ func scrape(url string, ch chan filmSend) {
 	ajc := colly.NewCollector(
 		colly.Async(true),
 	)
+
+
+	count = 0
+
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
@@ -284,7 +288,8 @@ func scrape(url string, ch chan filmSend) {
 		year := e.Attr("data-film-release-year")
 
 		// Get index of this element
-		index := e.Index
+		index := count
+		count++
 
 		tempfilm := film{
 			Slug:  (site + slug),
