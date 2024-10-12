@@ -13,6 +13,8 @@
 
 <script>
 import ding from '../utils/ding';
+import distinctColors from 'distinct-colors'
+
 
 const random = Matter.Common.random;
 const Engine = Matter.Engine;
@@ -28,6 +30,7 @@ let sketch = function (p, parent) {
         movies = [],
         cols = 11,
         spacing,
+        palette,
         rows = 15,
         particleSize = 12,
         slotWidth,
@@ -41,7 +44,7 @@ let sketch = function (p, parent) {
 
         engine = Engine.create();
         world = engine.world;
-        world.gravity.y = 0.6;
+        world.gravity.y = 0.45;
 
         spacing = p.width / cols;
 
@@ -69,7 +72,8 @@ let sketch = function (p, parent) {
                 }
 
                 // Call the ding function with the velocity-based volume and frequency
-                ding(v, frequency);
+                console.log(frequency)
+                ding(v, Math.max(frequency, 50));
             }
         });
 
@@ -130,6 +134,23 @@ let sketch = function (p, parent) {
     };
 
     p.createPlinkos = function () {
+        let count = 0
+        for (let j = 0; j < rows; j++) {
+            for (let i = 0; i < cols + 1; i++) {
+                count++
+            }
+        }
+
+        palette = distinctColors({
+            count,
+            lightMin: 30,
+            lightMax: 50,
+            chromaMin: 0,
+            chromaMax: 100,
+            hueMin: 220,
+            hueMax: 360
+        });
+
         for (let j = 0; j < rows; j++) {
             for (let i = 0; i < cols + 1; i++) {
                 let x = i * spacing;
@@ -168,7 +189,7 @@ let sketch = function (p, parent) {
     p.draw = function () {
         Engine.update(engine);
 
-        if (Math.random() < 0.01) {
+        if (Math.random() < 0.02) {
             p.preDraw()
         }
 
@@ -292,7 +313,8 @@ let sketch = function (p, parent) {
             restitution: 1,
             friction: 0,
         };
-        this.color = [random(80, 150), random(80, 150), random(80, 150)];
+        let color = palette[Math.floor(Math.random() * palette.length)];
+        this.color = [color._rgb[0], color._rgb[1], color._rgb[2]];
         this.body = Bodies.circle(x + (Math.random()*12)-6, y + (Math.random()*12)-6, r, options);
         this.body.label = "plinko";
         this.body.frequency = (Math.random() * 300) + (y * 0.5);
