@@ -261,7 +261,7 @@ let sketch = function (p, parent) {
         const pos = oldPosition ? oldPosition : this.body.position;
         p.translate(pos.x, pos.y);
 
-        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 1.3 : 0))
+        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : -1))
         p.pop();
 
         return {x: pos.x, y: pos.y}
