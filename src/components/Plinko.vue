@@ -31,6 +31,7 @@ let sketch = function (p, parent) {
         cols = 11,
         spacing,
         palette,
+        frame = 0,
         rows = 15,
         particleSize = 12,
         slotWidth,
@@ -72,7 +73,9 @@ let sketch = function (p, parent) {
                 }
 
                 // Call the ding function with the velocity-based volume and frequency
-                console.log(v)
+                
+                p.preDraw()
+                
                 ding(v, frequency);
             }
         });
@@ -177,6 +180,8 @@ let sketch = function (p, parent) {
     }
 
     p.preDraw = function () {
+        p.background(21)
+
         for (let i = 0; i < plinkos.length; i++) {
             plinkos[i].show();
         }
@@ -189,13 +194,16 @@ let sketch = function (p, parent) {
     p.draw = function () {
         Engine.update(engine);
 
-        if (Math.random() < 0.02) {
-            p.preDraw()
+        frame++;
+
+        // Every 24 frames
+        if (frame % 24 == 0) {
+            
         }
 
         // Draw black balls in ball positions
         for (let i = 0; i < particles.length; i++) {
-            particles[i].show(ballPositions[i]);
+            //particles[i].show(ballPositions[i]);
         }
 
         let nextBallPositions = {}
@@ -295,7 +303,7 @@ let sketch = function (p, parent) {
         p.translate(pos.x, pos.y);
 
         
-        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : -0.1))
+        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : 0))
         
         p.pop();
 
