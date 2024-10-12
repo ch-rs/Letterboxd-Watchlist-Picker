@@ -31,6 +31,7 @@ let sketch = function (p, parent) {
         rows = 15,
         particleSize = 12,
         slotWidth,
+        ballPositions = {},
         alerted = false,
         plinkoSize = 14;
 
@@ -168,12 +169,17 @@ let sketch = function (p, parent) {
     }
 
     p.draw = function () {
-
-        
         Engine.update(engine);
 
+        // Draw black balls in ball positions
         for (let i = 0; i < particles.length; i++) {
-            particles[i].show();
+            particles[i].show(ballPositions[i]);
+        }
+
+        let nextBallPositions = {}
+
+        for (let i = 0; i < particles.length; i++) {
+            nextBallPositions[i] = particles[i].show();
             particles[i].isOffScreen()
 
                             /*
@@ -195,6 +201,8 @@ let sketch = function (p, parent) {
             }
                             */
         }
+
+        ballPositions = nextBallPositions
 
     };
 
@@ -235,14 +243,28 @@ let sketch = function (p, parent) {
         return false;
     };
 
-    Particle.prototype.show = function () {
+    Particle.prototype.show = function (oldPosition = false) {
+
         p.noStroke();
-        p.fill(255, 255, 255);
-        const pos = this.body.position;
+
+        if (oldPosition) {
+            p.fill(21);
+            p.push();
+        }
+        else {
+            p.fill(255, 255, 255);
+            p.push();
+        }
+
         p.push();
+
+        const pos = oldPosition ? oldPosition : this.body.position;
         p.translate(pos.x, pos.y);
-        p.ellipse(0, 0, this.r * 2);
+
+        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 1.3 : 0))
         p.pop();
+
+        return {x: pos.x, y: pos.y}
     };
 
     // ======================================================
