@@ -72,8 +72,8 @@ let sketch = function (p, parent) {
                 }
 
                 // Call the ding function with the velocity-based volume and frequency
-                console.log(frequency)
-                ding(v, Math.max(frequency, 50));
+                console.log(v)
+                ding(v, frequency);
             }
         });
 
@@ -295,7 +295,7 @@ let sketch = function (p, parent) {
         p.translate(pos.x, pos.y);
 
         
-        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : -1.4))
+        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : -0.1))
         
         p.pop();
 
