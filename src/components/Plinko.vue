@@ -244,24 +244,23 @@ let sketch = function (p, parent) {
     };
 
     Particle.prototype.show = function (oldPosition = false) {
+        
+        const pos = oldPosition ? oldPosition : this.body.position;
 
         p.noStroke();
 
         if (oldPosition) {
             p.fill(21);
-            p.push();
         }
         else {
             p.fill(255, 255, 255);
-            p.push();
         }
 
         p.push();
 
-        const pos = oldPosition ? oldPosition : this.body.position;
         p.translate(pos.x, pos.y);
-
         p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : -1))
+
         p.pop();
 
         return {x: pos.x, y: pos.y}
