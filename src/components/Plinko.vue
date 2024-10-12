@@ -85,6 +85,9 @@ let sketch = function (p, parent) {
             }
         });
         */
+
+        p.background(21);
+
     };
 
     p.populate = function (newMovies) {
@@ -103,6 +106,8 @@ let sketch = function (p, parent) {
 
             p.createPlinkos();
             p.createBoundaries();
+
+            p.preDraw()
         }, 1000);
     };
 
@@ -152,8 +157,19 @@ let sketch = function (p, parent) {
         return Math.floor(x / sw);
     }
 
+    p.preDraw = function () {
+        for (let i = 0; i < plinkos.length; i++) {
+            plinkos[i].show();
+        }
+
+        for (let i = 0; i < bounds.length; i++) {
+            bounds[i].show();
+        }
+    }
+
     p.draw = function () {
-        p.background(21);
+
+        
         Engine.update(engine);
 
         for (let i = 0; i < particles.length; i++) {
@@ -180,13 +196,6 @@ let sketch = function (p, parent) {
                             */
         }
 
-        for (let i = 0; i < plinkos.length; i++) {
-            plinkos[i].show();
-        }
-
-        for (let i = 0; i < bounds.length; i++) {
-            bounds[i].show();
-        }
     };
 
     function Particle(x, y, rad) {
