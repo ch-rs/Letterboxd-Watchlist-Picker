@@ -144,11 +144,11 @@ let sketch = function (p, parent) {
         palette = distinctColors({
             count,
             lightMin: 30,
-            lightMax: 50,
-            chromaMin: 0,
+            lightMax: 45,
+            chromaMin: 20,
             chromaMax: 100,
-            hueMin: 220,
-            hueMax: 360
+            hueMin: 190,
+            hueMax: 300
         });
 
         for (let j = 0; j < rows; j++) {
