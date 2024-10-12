@@ -41,7 +41,7 @@ let sketch = function (p, parent) {
 
         engine = Engine.create();
         world = engine.world;
-        world.gravity.y = 2;
+        world.gravity.y = 0.6;
 
         spacing = p.width / cols;
 
@@ -50,9 +50,6 @@ let sketch = function (p, parent) {
                 let pair = event.pairs[i];
                 let velocityA = pair.bodyA.velocity;
                 let velocityB = pair.bodyB.velocity;
-
-                console.log(`Velocity of bodyA: x=${velocityA.x}, y=${velocityA.y}`);
-                console.log(`Velocity of bodyB: x=${velocityB.x}, y=${velocityB.y}`);
 
                 // Calculate the magnitude of the velocities
                 let speedA = Math.sqrt(velocityA.x * velocityA.x + velocityA.y * velocityA.y);
@@ -171,6 +168,10 @@ let sketch = function (p, parent) {
     p.draw = function () {
         Engine.update(engine);
 
+        if (Math.random() < 0.01) {
+            p.preDraw()
+        }
+
         // Draw black balls in ball positions
         for (let i = 0; i < particles.length; i++) {
             particles[i].show(ballPositions[i]);
@@ -213,16 +214,18 @@ let sketch = function (p, parent) {
 
         const options = {
             isStatic: false,
-            mass: 0,
+            mass: 10,
             density: 1,
             restitution: 1,
-            friction: 1,
+            friction: 0
         };
 
         this.body = Bodies.circle(x, y, rad, options);
         this.body.label = "particle";
         this.r = rad;
         this.color = [255, 255, 255];
+        this.type = Math.floor(Math.random() * 3);
+        this.body.targetAngle = this.body.angle;
 
         World.add(world, this.body);
     }
@@ -243,9 +246,19 @@ let sketch = function (p, parent) {
         return false;
     };
 
+    Particle.prototype.updateRotation = function () {
+        const currentAngle = this.body.angle;
+        const targetAngle = this.body.targetAngle;
+        const angleDifference = targetAngle - currentAngle;
+
+        // Apply a small fraction of the difference to the current angle
+        this.body.angle += angleDifference * 0.1;
+    };
+
+
     Particle.prototype.show = function (oldPosition = false) {
-        
         const pos = oldPosition ? oldPosition : this.body.position;
+
 
         p.noStroke();
 
@@ -259,8 +272,10 @@ let sketch = function (p, parent) {
         p.push();
 
         p.translate(pos.x, pos.y);
-        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : -1))
 
+        
+        p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : -1.4))
+        
         p.pop();
 
         return {x: pos.x, y: pos.y}
@@ -278,7 +293,7 @@ let sketch = function (p, parent) {
             friction: 0,
         };
         this.color = [random(80, 150), random(80, 150), random(80, 150)];
-        this.body = Bodies.circle(x, y, r, options);
+        this.body = Bodies.circle(x + (Math.random()*12)-6, y + (Math.random()*12)-6, r, options);
         this.body.label = "plinko";
         this.body.frequency = (Math.random() * 300) + (y * 0.5);
         this.r = r;
