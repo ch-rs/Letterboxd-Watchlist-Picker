@@ -303,7 +303,7 @@ let sketch = function (p, parent) {
         p.ellipse(0, 0, this.r * 2 + (oldPosition ? 0 : 0))
         p.pop();
 
-
+        /*
         // Draw a new circle on top of the particle
         p.fill(21);
         p.push();
@@ -320,6 +320,7 @@ let sketch = function (p, parent) {
         p.translate(pos.x, pos.y + 1);
         p.rect(-2.5, 0, 5, 1);
         p.pop();
+        */
 
         return {x: pos.x, y: pos.y}
     };
