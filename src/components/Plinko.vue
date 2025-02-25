@@ -3,7 +3,7 @@
         <button class="drop" @click="dropBall">Drop!</button>
         <div class="parent" ref="myCanvas">
             <div v-if="movies" class="images">
-                <div v-for="movie in movies" class="image">
+                <div v-for="(movie, i) in movies" :key="i" class="image" :style="{ width: `calc(${movie.widthPercentage}%)` }">
                     <img :src="movie.image_url" />
                 </div>
             </div>
@@ -73,9 +73,9 @@ let sketch = function (p, parent) {
                 }
 
                 // Call the ding function with the velocity-based volume and frequency
-                
+
                 p.preDraw()
-                
+
                 ding(v, frequency);
             }
         });
@@ -101,18 +101,72 @@ let sketch = function (p, parent) {
 
         // Calculate the width of each slot
         setTimeout(() => {
+            // Check if we have valid original_index values
+            const hasValidOriginalIndices = p.movies.some(movie =>
+                movie.original_index !== undefined &&
+                movie.original_index >= 0 &&
+                movie.original_index < 3
+            );
 
-            slotWidth = p.width / newMovies.length;
+            if (hasValidOriginalIndices) {
+                // Define width multipliers for the oldest movies
+                const topMovieMultipliers = [2.5, 1.8, 1.4]; // Multipliers for movies with OriginalIndex 0, 1, 2
 
-            // Loop through p.movies give each an X position based on priority value
-            for (let i = 0; i < p.movies.length; i++) {
-                p.movies[i].x = i * slotWidth;
+                // Calculate total width units
+                let totalWidthUnits = 0;
+                for (let i = 0; i < p.movies.length; i++) {
+                    const originalIndex = p.movies[i].original_index;
+                    if (originalIndex !== undefined && originalIndex >= 0 && originalIndex < 3) {
+                        // This is one of the top 3 oldest movies
+                        totalWidthUnits += topMovieMultipliers[originalIndex];
+                    } else {
+                        // Regular movie
+                        totalWidthUnits += 1;
+                    }
+                }
+
+                // Calculate the base unit width
+                const baseUnitWidth = p.width / totalWidthUnits;
+
+                // Assign positions and widths to each movie
+                let currentX = 0;
+                for (let i = 0; i < p.movies.length; i++) {
+                    const originalIndex = p.movies[i].original_index;
+                    let movieWidth;
+
+                    if (originalIndex !== undefined && originalIndex >= 0 && originalIndex < 3) {
+                        // This is one of the top 3 oldest movies
+                        movieWidth = baseUnitWidth * topMovieMultipliers[originalIndex];
+                    } else {
+                        // Regular movie
+                        movieWidth = baseUnitWidth;
+                    }
+
+                    p.movies[i].x = currentX;
+                    p.movies[i].width = movieWidth;
+
+                    // Calculate width as percentage for CSS
+                    p.movies[i].widthPercentage = (movieWidth / p.width) * 100;
+
+                    currentX += movieWidth;
+                }
+            } else {
+                // No valid original indices - use equal widths for all movies
+                const equalWidth = p.width / p.movies.length;
+
+                for (let i = 0; i < p.movies.length; i++) {
+                    p.movies[i].x = equalWidth * i;
+                    p.movies[i].width = equalWidth;
+                    p.movies[i].widthPercentage = 100 / p.movies.length;
+                }
             }
+
+            slotWidth = p.width / p.movies.length; // Keep this for reference
 
             p.createPlinkos();
             p.createBoundaries();
 
-            p.preDraw()
+            p.preDraw();
         }, 1000);
     };
 
@@ -126,8 +180,20 @@ let sketch = function (p, parent) {
         let b = new Boundary(p.width / 2, p.height + 50, p.width, 100);
         bounds.push(b);
 
-        for (let i = 0; i < cols + 1; i++) {
-            const x = i * slotWidth;
+        // Create boundaries based on movie positions and widths
+        for (let i = 0; i <= cols; i++) {
+            let x;
+            if (i === 0) {
+                // First boundary at left edge
+                x = 0;
+            } else if (i === cols) {
+                // Last boundary at right edge
+                x = p.width;
+            } else {
+                // Boundaries between movies
+                x = p.movies[i - 1].x + p.movies[i - 1].width;
+            }
+
             const h = 60;
             const w = 5;
             const y = p.height - h / 2;
@@ -198,7 +264,7 @@ let sketch = function (p, parent) {
 
         // Every 24 frames
         if (frame % 24 == 0) {
-            
+
         }
 
         // Draw black balls in ball positions
@@ -212,24 +278,24 @@ let sketch = function (p, parent) {
             nextBallPositions[i] = particles[i].show();
             particles[i].isOffScreen()
 
-                            /*
-            if (p.movies.length && this.checkIfStopped(particles[i])) {
-                const segmentIndex = this.getSegmentIndex(particles[i]);
-                console.log(segmentIndex)
-                console.log(`Particle stopped in segment: ${segmentIndex}`);
-                console.log(p.movies[segmentIndex]);
-                setTimeout(() => {
-                    if (!alerted) {
-                        alert(`You will watch ${p.movies[segmentIndex].title}`);
-                    }
-                    alerted = true;
+            /*
+if (p.movies.length && this.checkIfStopped(particles[i])) {
+const segmentIndex = this.getSegmentIndex(particles[i]);
+console.log(segmentIndex)
+console.log(`Particle stopped in segment: ${segmentIndex}`);
+console.log(p.movies[segmentIndex]);
+setTimeout(() => {
+    if (!alerted) {
+        alert(`You will watch ${p.movies[segmentIndex].title}`);
+    }
+    alerted = true;
 
-                   // Remove the particle from the world
-                    particles.splice(i, 1);
-                    i--;
-                }, 1000);
-            }
-                            */
+   // Remove the particle from the world
+    particles.splice(i, 1);
+    i--;
+}, 1000);
+}
+            */
         }
 
         ballPositions = nextBallPositions
@@ -322,7 +388,7 @@ let sketch = function (p, parent) {
         p.pop();
         */
 
-        return {x: pos.x, y: pos.y}
+        return { x: pos.x, y: pos.y }
     };
 
     // ======================================================
@@ -338,7 +404,7 @@ let sketch = function (p, parent) {
         };
         let color = palette[Math.floor(Math.random() * palette.length)];
         this.color = [color._rgb[0], color._rgb[1], color._rgb[2]];
-        this.body = Bodies.circle(x + (Math.random()*12)-6, y + (Math.random()*12)-6, r, options);
+        this.body = Bodies.circle(x + (Math.random() * 12) - 6, y + (Math.random() * 12) - 6, r, options);
         this.body.label = "plinko";
         this.body.frequency = (Math.random() * 300) + (y * 0.5);
         this.r = r;
@@ -430,7 +496,6 @@ canvas {
     width: 100%;
     height: auto;
     display: flex;
-    background: #808080;
 }
 
 .parent {

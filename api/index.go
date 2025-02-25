@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-//	"math/rand"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,11 +17,12 @@ import (
 
 //Film struct for http response
 type film struct {
-	Slug  string `json:"slug"`      //url of film
-	Image string `json:"image_url"` //url of image
-	Year  string `json:"release_year"`
-	Name  string `json:"film_name"`
-	Length string `json:"film_length"`
+	Slug       string `json:"slug"`         //url of film
+	Image      string `json:"image_url"`    //url of image
+	Year       string `json:"release_year"`
+	Name       string `json:"film_name"`
+	Length     string `json:"film_length"`
+	OriginalIndex int    `json:"original_index"` //original position in the list before shuffling (-1 if not in top)
 }
 
 //struct for channel to send film and whether is has finshed a user
@@ -219,7 +220,21 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 		filmList = ignoreFeature(filmList)
 	}
 
-	//rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
+	// Save the original indices before shuffling
+	if len(filmList) > 0 {
+		// Initialize all films with -1 to indicate they weren't in the top
+		for i := range filmList {
+			filmList[i].OriginalIndex = -1
+		}
+		
+		// Mark the top films with their original indices
+		topCount := min(3, len(filmList))
+		for i := 0; i < topCount; i++ {
+			filmList[i].OriginalIndex = i
+		}
+	}
+
+	rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
 
 	numFilms := len(filmList)
 	if numFilms > 20 {
@@ -228,7 +243,6 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 
 	return filmList[:numFilms], nil
 }
-
 
 
 func scrapeUserWithLength(userName string, ch chan filmSend) {
@@ -264,8 +278,10 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 	} else {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
 		url = site + "/" + strslice[0] + "/list/" + strslice[1]
-
 	}
+
+	// Add sort
+	url = url + "/by/added-earliest/"
 	scrape(url, ch)
 }
 
@@ -556,4 +572,11 @@ func whatToIgnore(ignoreString string) toIgnore {
 		short: contains(ignoreList, "shorts"),
 		feature: contains(ignoreList, "feature"),
 	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

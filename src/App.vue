@@ -82,6 +82,48 @@ export default {
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
+                {
+                    title: "The Shawshank Redemption",
+                    url: "https://www.imdb.com/title/tt0111161/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Godfather",
+                    url: "https://www.imdb.com/title/tt0068646/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Dark Knight",
+                    url: "https://www.imdb.com/title/tt0468569/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Shawshank Redemption",
+                    url: "https://www.imdb.com/title/tt0111161/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Godfather",
+                    url: "https://www.imdb.com/title/tt0068646/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Dark Knight",
+                    url: "https://www.imdb.com/title/tt0468569/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                },
+                {
+                    title: "The Godfather",
+                    url: "https://www.imdb.com/title/tt0068646/",
+                    image_url:
+                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                }
             ],
 
             info: "", // json blob from AJAX request
@@ -190,10 +232,10 @@ export default {
                 let hash = this.hashCode(apiUrl);
                 console.log("url: " + apiUrl + "\nhash: " + hash);
 
-                // If localhost, use dummy data on this comoonent
+                // If localhost, use dummy data on this component
                 if (window.location.hostname == "localhost") {
                     this.loading = false;
-                    this.movies = [...this.movies, ...this.movies, ...this.movies];
+                    this.movies = [...this.movies];
                     return;
                 }
 
