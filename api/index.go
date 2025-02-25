@@ -303,7 +303,6 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 
 func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
-	posterCount := 0  // Track the number of posters processed
 
 	ajc := colly.NewCollector(
 		colly.Async(true),
@@ -357,7 +356,6 @@ func scrape(url string, ch chan filmSend) {
 
 func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own function
 	siteToVisit := url
-	posterCount := 0  // Track the number of posters processed
 	
 	ajc := colly.NewCollector(
 		colly.Async(true),
@@ -372,10 +370,9 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if posterCount < 3 {
-			originalIndex = posterCount
+		if  e.Index < 3 {
+			originalIndex = e.Index
 		}
-		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
@@ -417,7 +414,6 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 func scrapeActor(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	fmt.Println(siteToVisit)
-	posterCount := 0  // Track the number of posters processed
 
 	c := colly.NewCollector(
 		colly.Async(true),
@@ -431,10 +427,9 @@ func scrapeActor(actor string, ch chan filmSend) {
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if posterCount < 3 {
-			originalIndex = posterCount
+		if e.Index < 3 {
+			originalIndex = e.Index
 		}
-		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
@@ -462,7 +457,6 @@ func scrapeActor(actor string, ch chan filmSend) {
 func scrapeActorWithLength(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	log.Println(siteToVisit)
-	posterCount := 0  // Track the number of posters processed
 
 	c := colly.NewCollector(
 		colly.Async(true),
@@ -482,10 +476,9 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if posterCount < 3 {
-			originalIndex = posterCount
+		if e.Index < 3 {
+			originalIndex = e.Index
 		}
-		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
