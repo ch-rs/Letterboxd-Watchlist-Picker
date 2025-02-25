@@ -250,20 +250,6 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, []
 		filmList = ignoreFeature(filmList)
 	}
 
-	// Save the original indices before shuffling
-	if len(filmList) > 0 {
-		// Initialize all films with -1 to indicate they weren't in the top
-		for i := range filmList {
-			filmList[i].OriginalIndex = -1
-		}
-		
-		// Mark the top films with their original indices
-		topCount := min(3, len(filmList))
-		for i := 0; i < topCount; i++ {
-			filmList[i].OriginalIndex = i
-		}
-	}
-
 	rand.Shuffle(len(filmList), func(i, j int) { filmList[i], filmList[j] = filmList[j], filmList[i] })
 
 	numFilms := len(filmList)
@@ -317,6 +303,7 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 
 func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
+	posterCount := 0  // Track the number of posters processed
 
 	ajc := colly.NewCollector(
 		colly.Async(true),
@@ -326,11 +313,20 @@ func scrape(url string, ch chan filmSend) {
 		slug := e.Attr("data-film-link")
 		img := e.ChildAttr("img", "src")
 		year := e.Attr("data-film-release-year")
+		
+		// Set original index for the first 3 films, -1 for the rest
+		originalIndex := -1
+		if posterCount < 3 {
+			originalIndex = posterCount
+		}
+		posterCount++
+		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBigger(img),
 			Year: year,
 			Name:  name,
+			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
 	})
@@ -362,6 +358,8 @@ func scrape(url string, ch chan filmSend) {
 
 func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own function
 	siteToVisit := url
+	posterCount := 0  // Track the number of posters processed
+	
 	ajc := colly.NewCollector(
 		colly.Async(true),
 	)
@@ -372,12 +370,21 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		img := e.ChildAttr("img", "src")
 		year := e.ChildAttr("div.film-poster","data-film-release-year")
 		lenght := e.ChildText("p.text-footer")
+		
+		// Set original index for the first 3 films, -1 for the rest
+		originalIndex := -1
+		if posterCount < 3 {
+			originalIndex = posterCount
+		}
+		posterCount++
+		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
+			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
 	})
@@ -411,6 +418,7 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 func scrapeActor(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	fmt.Println(siteToVisit)
+	posterCount := 0  // Track the number of posters processed
 
 	c := colly.NewCollector(
 		colly.Async(true),
@@ -421,14 +429,23 @@ func scrapeActor(actor string, ch chan filmSend) {
 		slug := e.Attr("data-film-link")
 		img := e.ChildAttr("img", "src")
 		year := e.Attr("data-film-release-year")
+		
+		// Set original index for the first 3 films, -1 for the rest
+		originalIndex := -1
+		if posterCount < 3 {
+			originalIndex = posterCount
+		}
+		posterCount++
+		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBiggerActor(img),
 			Year: year,
 			Name:  name,
+			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
-		})
+	})
 
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
@@ -446,6 +463,7 @@ func scrapeActor(actor string, ch chan filmSend) {
 func scrapeActorWithLength(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	log.Println(siteToVisit)
+	posterCount := 0  // Track the number of posters processed
 
 	c := colly.NewCollector(
 		colly.Async(true),
@@ -462,12 +480,21 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 		img := e.ChildAttr("img", "src")
 		year := e.ChildAttr("div.film-poster","data-film-release-year")
 		lenght := e.ChildText("p.text-footer")
+		
+		// Set original index for the first 3 films, -1 for the rest
+		originalIndex := -1
+		if posterCount < 3 {
+			originalIndex = posterCount
+		}
+		posterCount++
+		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
+			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
 	})
