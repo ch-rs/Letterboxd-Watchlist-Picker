@@ -288,7 +288,7 @@ export default {
                             pre_image.src = json.image_url;
                         }
 
-                        vue.movies = json;
+                        vue.movies = json.films;
                     });
             } catch (e) {
                 alert(

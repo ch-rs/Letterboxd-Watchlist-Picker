@@ -25,6 +25,12 @@ type film struct {
 	OriginalIndex int    `json:"original_index"` //original position in the list before shuffling (-1 if not in top)
 }
 
+// Add a new response struct that includes URLs
+type filmResponse struct {
+	Films []film  `json:"films"`
+	URLs  []string `json:"urls"`
+}
+
 //struct for channel to send film and whether is has finshed a user
 type filmSend struct {
 	film film //film to be sent over channel
@@ -115,15 +121,16 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	var userFilm []film
 	var err error
+	var scrapedURLs []string
 
 	if inter {
 		if len(users) == 1 {
-			userFilm, err = scrapeMain(users, false, ignoreing)
+			userFilm, scrapedURLs, err = scrapeMain(users, false, ignoreing)
 		} else {
-			userFilm, err = scrapeMain(users, true, ignoreing)
+			userFilm, scrapedURLs, err = scrapeMain(users, true, ignoreing)
 		}
 	} else {
-		userFilm, err = scrapeMain(users, false, ignoreing)
+		userFilm, scrapedURLs, err = scrapeMain(users, false, ignoreing)
 	}
 	if err != nil {
 		var e *nothingError
@@ -139,7 +146,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	js, err := json.Marshal(userFilm)
+	// Create response with films and URLs
+	response := filmResponse{
+		Films: userFilm,
+		URLs:  scrapedURLs,
+	}
+
+	js, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, "internal error", 500)
 		return
@@ -149,22 +162,36 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 
 //main scraping function
-func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, error) {
+func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, []string, error) {
 	var user int = 0          //conuter for number of users increses by one when a users page starts being scraped decreses when user has finished think kinda like a semaphore
 	var totalFilms []film     //final list to hold all film
 	ch := make(chan filmSend) //channel to send films over
+	
+	// Track URLs being scraped
+	var scrapedURLs []string
+	
 	// start go routine to scrape each user
 	for _, a := range users {
 		log.Println(a)
 		user++
+		var url string
+		
 		if strings.Contains(a, "/") {
 			if (strings.Contains(a,"actor/") || strings.Contains(a,"director/")) {
+				url = site + "/" + a
 				if ignoreList.short || ignoreList.feature {
 					go scrapeActorWithLength(a, ch)
 				} else {
 					go scrapeActor(a, ch)
 				}
 			} else {
+				if strings.Contains(a, "/list/") {
+					url = site + "/" + a + "/by/added-earliest/"
+				} else {
+					strslice := strings.Split(a, "/")
+					url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
+				}
+				
 				if ignoreList.short || ignoreList.feature {
 					go scrapeListWithLength(a, ch)
 				} else {
@@ -172,12 +199,15 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 				}
 			}
 		} else {
+			url = site + "/" + a + "/watchlist"
 			if ignoreList.short || ignoreList.feature {
 				go scrapeUserWithLength(a, ch)
 			} else {
 				go scrapeUser(a, ch)
 			}
 		}
+		
+		scrapedURLs = append(scrapedURLs, url)
 	}
 	for {
 		userFilm := <-ch
@@ -195,7 +225,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 	//chose random film from list
 	if len(totalFilms) == 0 {
 		// Return empty film list and error
-		return nil, &nothingError{reason: UNION}
+		return nil, nil, &nothingError{reason: UNION}
 	}
 	log.Print("results")
 
@@ -204,7 +234,7 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 		intersectList := getintersect(totalFilms,len(users))
 		length := len(intersectList)
 		if length == 0 {
-			return nil, &nothingError{reason: INTERSECT}
+			return nil, nil, &nothingError{reason: INTERSECT}
 		}
 		filmList = intersectList
 	} else {
@@ -241,7 +271,8 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, er
 		numFilms = 20
 	}
 
-	return filmList[:numFilms], nil
+	// Return the URLs along with the films
+	return filmList[:numFilms], scrapedURLs, nil
 }
 
 
