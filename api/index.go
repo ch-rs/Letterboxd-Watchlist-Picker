@@ -313,13 +313,14 @@ func scrape(url string, ch chan filmSend) {
 		slug := e.Attr("data-film-link")
 		img := e.ChildAttr("img", "src")
 		year := e.Attr("data-film-release-year")
+
+		index = e.index
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if posterCount < 3 {
-			originalIndex = posterCount
+		if index < 3 {
+			originalIndex = index
 		}
-		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
