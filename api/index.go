@@ -315,8 +315,8 @@ func scrape(url string, ch chan filmSend) {
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Index() < 3 {
-			originalIndex = e.DOM.Index()
+		if e.DOM.Parent().Index() < 3 {
+			originalIndex = e.DOM.Parent().Index()
 		}
 		
 		tempfilm := film{
@@ -370,8 +370,8 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Index() < 3 {
-			originalIndex = e.DOM.Index()
+		if e.DOM.Parent().Index() < 3 {
+			originalIndex = e.DOM.Parent().Index()
 		}
 		
 		tempfilm := film{
@@ -427,8 +427,8 @@ func scrapeActor(actor string, ch chan filmSend) {
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Index() < 3 {
-			originalIndex = e.DOM.Index()
+		if e.DOM.Parent().Index() < 3 {
+			originalIndex = e.DOM.Parent().Index()
 		}
 		
 		tempfilm := film{
@@ -476,8 +476,8 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Index() < 3 {
-			originalIndex = e.DOM.Index()
+		if e.DOM.Parent().Index() < 3 {
+			originalIndex = e.DOM.Parent().Index()
 		}
 		
 		tempfilm := film{
