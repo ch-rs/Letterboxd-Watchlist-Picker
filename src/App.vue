@@ -79,6 +79,7 @@ export default {
                 {
                     title: "The Dark Knight",
                     url: "https://www.imdb.com/title/tt0468569/",
+                    original_index: 1,
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
@@ -91,6 +92,7 @@ export default {
                 {
                     title: "The Godfather",
                     url: "https://www.imdb.com/title/tt0068646/",
+                    original_index: 0,
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
@@ -115,6 +117,7 @@ export default {
                 {
                     title: "The Dark Knight",
                     url: "https://www.imdb.com/title/tt0468569/",
+                    original_index: 2,
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
@@ -212,7 +215,7 @@ export default {
                 ignoreList.push("feature");
             }
 
-            let apiUrl = "/api?users=" + userlist.join("&users=");
+            let apiUrl = "/api?users=" + userlist.map(u => (u + '/by/added-earliest/')).join("&users=")
             let clientUrl = "?u=" + userlist.join("&u=");
 
             if (ignoreList.length > 0) {

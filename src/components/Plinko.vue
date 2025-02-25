@@ -2,8 +2,8 @@
     <div>
         <button class="drop" @click="dropBall">Drop!</button>
         <div class="parent" ref="myCanvas">
-            <div v-if="movies" class="images">
-                <div v-for="(movie, i) in movies" :key="i" class="image" :style="{ width: `calc(${movie.widthPercentage}%)` }">
+            <div v-if="movies && widthPercentages" class="images">
+                <div v-for="(movie, i) in movies" :key="i" class="image" :style="{ width: widthPercentages[i] + '%' }">
                     <img :src="movie.image_url" />
                 </div>
             </div>
@@ -32,6 +32,7 @@ let sketch = function (p, parent) {
         spacing,
         palette,
         frame = 0,
+        widthPercentages = [],
         rows = 15,
         particleSize = 12,
         slotWidth,
@@ -146,7 +147,7 @@ let sketch = function (p, parent) {
                     p.movies[i].width = movieWidth;
 
                     // Calculate width as percentage for CSS
-                    p.movies[i].widthPercentage = (movieWidth / p.width) * 100;
+                    widthPercentages[i] = (movieWidth / p.width) * 100;
 
                     currentX += movieWidth;
                 }
@@ -157,7 +158,7 @@ let sketch = function (p, parent) {
                 for (let i = 0; i < p.movies.length; i++) {
                     p.movies[i].x = equalWidth * i;
                     p.movies[i].width = equalWidth;
-                    p.movies[i].widthPercentage = 100 / p.movies.length;
+                    widthPercentages[i] = 100 / p.movies.length;
                 }
             }
 
@@ -169,6 +170,10 @@ let sketch = function (p, parent) {
             p.preDraw();
         }, 1000);
     };
+
+    p.getWidthPercentages = function () {
+        return widthPercentages
+    }
 
     p.newParticle = function () {
         alerted = false
@@ -456,6 +461,7 @@ export default {
     name: "Plinko",
     data() {
         return {
+            widthPercentages: null,
             myp5: null,
         };
     },
@@ -478,6 +484,9 @@ export default {
         this.myp5 = new p5(sketch, this.$refs.myCanvas);
         // Wait for movies to have length
         this.myp5.populate(this.movies);
+        setTimeout(() => {
+            this.widthPercentages = this.myp5.getWidthPercentages()
+        }, 2000)
     },
 };
 </script>

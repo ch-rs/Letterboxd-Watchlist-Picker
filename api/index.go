@@ -280,8 +280,6 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 		url = site + "/" + strslice[0] + "/list/" + strslice[1]
 	}
 
-	// Add sort
-	url = url + "/by/added-earliest/"
 	scrape(url, ch)
 }
 
