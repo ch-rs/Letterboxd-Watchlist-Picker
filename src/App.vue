@@ -215,7 +215,7 @@ export default {
                 ignoreList.push("feature");
             }
 
-            let apiUrl = "/api?users=" + userlist.map(u => (u + '/by/added-earliest/')).join("&users=")
+            let apiUrl = "/api?users=" + userlist.join("&users=")
             let clientUrl = "?u=" + userlist.join("&u=");
 
             if (ignoreList.length > 0) {
