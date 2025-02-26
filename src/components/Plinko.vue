@@ -8,7 +8,7 @@
                     'active': activeMovieIndex === i
                 }" :style="{ width: widthPercentages[i] + '%' }">
                     <img :src="movie.image_url" />
-                    <span class="movie-name">{{ movie.title }}</span>
+                    <span class="movie-name" v-text="movie.film_name"></span>
                 </div>
             </div>
         </div>
