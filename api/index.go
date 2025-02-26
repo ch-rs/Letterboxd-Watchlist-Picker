@@ -305,9 +305,7 @@ func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
 	posterCount := 0  // Track the number of posters processed
 
-	ajc := colly.NewCollector(
-		colly.Async(false),
-	)
+	ajc := colly.NewCollector()
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
@@ -330,9 +328,7 @@ func scrape(url string, ch chan filmSend) {
 		}
 		ch <- ok(tempfilm)
 	})
-	c := colly.NewCollector(
-		colly.Async(false),
-	)
+	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
 		e.ForEach("div.film-poster", func(i int, ein *colly.HTMLElement) {
@@ -360,9 +356,7 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 	siteToVisit := url
 	posterCount := 0  // Track the number of posters processed
 	
-	ajc := colly.NewCollector(
-		colly.Async(false),
-	)
+	ajc := colly.NewCollector()
 	extensions.RandomUserAgent(ajc)
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
@@ -389,9 +383,7 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		ch <- ok(tempfilm)
 	})
 
-	c := colly.NewCollector(
-		colly.Async(false),
-	)
+	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	extensions.RandomUserAgent(c)
 	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
@@ -420,9 +412,7 @@ func scrapeActor(actor string, ch chan filmSend) {
 	fmt.Println(siteToVisit)
 	posterCount := 0  // Track the number of posters processed
 
-	c := colly.NewCollector(
-		colly.Async(false),
-	)
+	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	c.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
 		name := e.Attr("data-film-name")
@@ -465,14 +455,10 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 	log.Println(siteToVisit)
 	posterCount := 0  // Track the number of posters processed
 
-	c := colly.NewCollector(
-		colly.Async(false),
-	)
+	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	extensions.RandomUserAgent(c)
-	ajc := colly.NewCollector(
-		colly.Async(false),
-	)
+	ajc := colly.NewCollector()
 	extensions.RandomUserAgent(ajc)
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
