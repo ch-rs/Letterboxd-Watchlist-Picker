@@ -66,64 +66,64 @@ export default {
             movies: [
                 {
                     film_name: "The Shawshank Redemption",
-                    url: "https://www.imdb.com/title/tt0111161/",
+                    slug: "https://www.imdb.com/title/tt0111161/",
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Godfather",
-                    url: "https://www.imdb.com/title/tt0068646/",
+                    slug: "https://www.imdb.com/title/tt0068646/",
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Dark Knight",
-                    url: "https://www.imdb.com/title/tt0468569/",
+                    slug: "https://www.imdb.com/title/tt0468569/",
                     original_index: 1,
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Shawshank Redemption",
-                    url: "https://www.imdb.com/title/tt0111161/",
+                    slug: "https://www.imdb.com/title/tt0111161/",
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Godfather",
-                    url: "https://www.imdb.com/title/tt0068646/",
+                    slug: "https://www.imdb.com/title/tt0068646/",
                     original_index: 0,
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Dark Knight",
-                    url: "https://www.imdb.com/title/tt0468569/",
+                    slug: "https://www.imdb.com/title/tt0468569/",
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Shawshank Redemption",
-                    url: "https://www.imdb.com/title/tt0111161/",
+                    slug: "https://www.imdb.com/title/tt0111161/",
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Godfather",
-                    url: "https://www.imdb.com/title/tt0068646/",
+                    slug: "https://www.imdb.com/title/tt0068646/",
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Dark Knight",
-                    url: "https://www.imdb.com/title/tt0468569/",
+                    slug: "https://www.imdb.com/title/tt0468569/",
                     original_index: 2,
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 },
                 {
                     film_name: "The Godfather",
-                    url: "https://www.imdb.com/title/tt0068646/",
+                    slug: "https://www.imdb.com/title/tt0068646/",
                     image_url:
                         "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
                 }

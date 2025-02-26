@@ -7,7 +7,9 @@
                     'image': true,
                     'active': activeMovieIndex === i
                 }" :style="{ width: widthPercentages[i] + '%' }">
-                    <img :src="movie.image_url" />
+                    <a :href="movie.slug" target="_blank">
+                        <img :src="movie.image_url" />
+                    </a>
                     <span class="movie-name" v-text="movie.film_name"></span>
                 </div>
             </div>
@@ -541,6 +543,10 @@ canvas {
     position: relative;
     width: fit-content;
     margin: auto;
+}
+
+.image a {
+    display: block;
 }
 
 .image img {
