@@ -12,8 +12,8 @@
                     </a>
                     <span class="movie-name">
                         <span v-text="movie.film_name"></span>
-                        <a :href="movie.slug" target="_blank">++++</a>
-                        <a :href="thisList" target="_blank">-----</a>
+                        <a :href="movie.slug" @click="$event.target.classList.add('clicked')" target="_blank">++++</a>
+                        <a :href="thisList" @click="$event.target.classList.add('clicked')" target="_blank">-------</a>
                     </span>
                 </div>
             </div>
@@ -43,7 +43,8 @@ let sketch = function (p, parent) {
         palette,
         frame = 0,
         widthPercentages = [],
-        rows = 15,
+        rows = 10,
+        rowStart = 100,
         particleSize = 12,
         slotWidth,
         ballPositions = {},
@@ -51,7 +52,7 @@ let sketch = function (p, parent) {
         plinkoSize = 14;
 
     p.setup = function () {
-        const c = p.createCanvas(612, 1100);
+        const c = p.createCanvas(612, 800);
         c.parent(parent);
 
         engine = Engine.create();
@@ -102,7 +103,6 @@ let sketch = function (p, parent) {
         });
         */
 
-        p.background(21);
 
     };
 
@@ -241,7 +241,7 @@ let sketch = function (p, parent) {
                 if (j % 2 == 0) {
                     x += spacing / 2;
                 }
-                const y = spacing + j * spacing;
+                const y = rowStart + j * spacing;
                 const p = new Plinko(x, y, plinkoSize + (Math.random() * 5 - 2.5));
                 plinkos.push(p);
             }
@@ -261,7 +261,7 @@ let sketch = function (p, parent) {
     }
 
     p.preDraw = function () {
-        p.background(21)
+        p.background('#0a0a0a')
 
         for (let i = 0; i < plinkos.length; i++) {
             plinkos[i].show();
@@ -467,7 +467,7 @@ setTimeout(() => {
     }
 
     Boundary.prototype.show = function () {
-        p.fill(60);
+        p.fill('#222');
         // stroke(255);
         p.noStroke();
         const { x, y } = this.body.position;
@@ -541,6 +541,10 @@ canvas {
     width: 100vw;
     height: auto;
     margin-block-start: 3em;
+    border: 3px solid #222;
+    border-top: 0;
+    position: relative;
+    z-index: 2;
 }
 
 .images {
@@ -551,6 +555,7 @@ canvas {
     height: auto;
     display: flex;
     padding-bottom: 15em;
+    z-index: 1;
 }
 
 .parent {
@@ -581,10 +586,10 @@ canvas {
     appearance: none;
     -webkit-appearance: none;
     width: 100%;
-    background: #000;
+    background: transparent;
+    border: 2px solid #222;
     color: #fff;
     display: inline-flex;
-    border: 0;
     max-width: 500px;
     padding: 1rem;
     font-weight: bold;
@@ -592,6 +597,10 @@ canvas {
     text-align: center;
     font-size: 1.5em;
     justify-content: center;
+}
+
+.drop:active {
+    transform: scale(0.95);
 }
 
 .movie-name {
@@ -612,6 +621,23 @@ canvas {
     font-weight: bold;
     text-decoration: none;
     color: currentColor;
+    display: inline-block;
+    position: relative;
+}
+
+.movie-name a::before {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    width: 120%;
+    height: 150%;
+    top: -25%;
+    left: -10%;
+}
+
+.movie-name a.clicked {
+    opacity: 1;
+    color: oklch(75.23% 0.209 144.64);
 }
 
 .dark .image.active .movie-name {

@@ -345,9 +345,9 @@ export default {
     --background: #fff;
     --foreground: #2c3e50;
 
-    --primary: #1caff2;
+    --primary: oklch(43.48% 0.17 260.2);
     --secondary: #000;
-    --tertiary: rgb(64 188 244 / 0.5);
+    --tertiary: oklch(62.39% 0.181 258.33);
 
     --white: #fff;
     --off-white: #ebebeb;
@@ -355,11 +355,11 @@ export default {
 }
 
 .dark {
-    --background: #14181d;
-    --foreground: #76a0ca;
+    --background: oklch(14.38% 0.007 256.88);
+    --foreground: oklch(99.4% 0 0);
 
     --secondary: #fff;
-    --tertiary: #526e89;
+    --tertiary: oklch(62.39% 0.181 258.33);
 }
 
 body {
