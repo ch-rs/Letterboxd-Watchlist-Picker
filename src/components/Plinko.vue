@@ -256,7 +256,7 @@ let sketch = function (p, parent) {
 
     p.getSegmentIndex = function (particle) {
         let sw = p.width / cols;
-        const x = particle.body.position.x;
+        const x = particle.body.position.x + 5;
         return Math.floor(x / sw);
     }
 
