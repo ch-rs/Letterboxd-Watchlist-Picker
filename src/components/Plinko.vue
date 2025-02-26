@@ -255,9 +255,23 @@ let sketch = function (p, parent) {
     }
 
     p.getSegmentIndex = function (particle) {
-        let sw = p.width / cols;
-        const x = particle.body.position.x + 5;
-        return Math.floor(x / sw);
+        const x = particle.body.position.x;
+        
+        // Check each movie's boundaries to find which segment contains the particle
+        for (let i = 0; i < p.movies.length; i++) {
+            const movieStartX = p.movies[i].x;
+            const movieEndX = movieStartX + p.movies[i].width;
+            
+            if (x >= movieStartX && x < movieEndX) {
+                return i;
+            }
+        }
+        
+        // Fallback for edge cases
+        if (x <= 0) return 0;
+        if (x >= p.width) return p.movies.length - 1;
+        
+        return Math.floor(x / (p.width / cols)); // Original fallback
     }
 
     p.preDraw = function () {
