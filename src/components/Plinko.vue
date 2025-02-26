@@ -210,7 +210,7 @@ let sketch = function (p, parent) {
             }
 
             const h = 60;
-            const w = 5;
+            const w = 3;
             const y = p.height - h / 2;
             b = new Boundary(x, y, w, h);
             bounds.push(b);
