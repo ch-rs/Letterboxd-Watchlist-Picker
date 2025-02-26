@@ -12,8 +12,8 @@
                     </a>
                     <span class="movie-name">
                         <span v-text="movie.film_name"></span>
-                        <a :href="movie.slug">++++</a>
-                        <a :href="thisList">-----</a>
+                        <a :href="movie.slug" target="_blank">++++</a>
+                        <a :href="thisList" target="_blank">-----</a>
                     </span>
                 </div>
             </div>
@@ -505,7 +505,7 @@ export default {
     computed: {
         thisList() {
             const parts = this.list.split('/');
-            return 'https://www.letterboxd.com/' + parts[0] + '/list/' + parts[1];
+            return 'https://letterboxd.com/' + parts[0] + '/list/' + parts[1];
         }
     },
     methods: {
