@@ -3,8 +3,12 @@
         <button class="drop" @click="dropBall">Drop!</button>
         <div class="parent" ref="myCanvas">
             <div v-if="movies && widthPercentages" class="images">
-                <div v-for="(movie, i) in movies" :key="i" class="image" :style="{ width: widthPercentages[i] + '%' }">
+                <div v-for="(movie, i) in movies" :key="i" :class="{
+                    'image': true,
+                    'active': activeMovieIndex === i
+                }" :style="{ width: widthPercentages[i] + '%' }">
                     <img :src="movie.image_url" />
+                    <span class="movie-name">{{ movie.title }}</span>
                 </div>
             </div>
         </div>
@@ -283,6 +287,18 @@ let sketch = function (p, parent) {
             nextBallPositions[i] = particles[i].show();
             particles[i].isOffScreen()
 
+            // Add this code to emit the ball's position
+            if (p.movies && p.movies.length) {
+                const segmentIndex = p.getSegmentIndex(particles[i]);
+                if (segmentIndex >= 0 && segmentIndex < p.movies.length) {
+                    // Dispatch custom event with the movie index
+                    const event = new CustomEvent('ballPositionUpdate', {
+                        detail: { movieIndex: segmentIndex }
+                    });
+                    window.dispatchEvent(event);
+                }
+            }
+
             /*
 if (p.movies.length && this.checkIfStopped(particles[i])) {
 const segmentIndex = this.getSegmentIndex(particles[i]);
@@ -445,7 +461,7 @@ setTimeout(() => {
     }
 
     Boundary.prototype.show = function () {
-        p.fill(128);
+        p.fill(60);
         // stroke(255);
         p.noStroke();
         const { x, y } = this.body.position;
@@ -463,6 +479,7 @@ export default {
         return {
             widthPercentages: null,
             myp5: null,
+            activeMovieIndex: null,
         };
     },
     props: {
@@ -479,6 +496,9 @@ export default {
         dropBall() {
             this.myp5.newParticle();
         },
+        updateActiveMovie(index) {
+            this.activeMovieIndex = index;
+        },
     },
     mounted() {
         this.myp5 = new p5(sketch, this.$refs.myCanvas);
@@ -487,7 +507,16 @@ export default {
         setTimeout(() => {
             this.widthPercentages = this.myp5.getWidthPercentages()
         }, 2000)
+
+        // Add event listener for ball position updates
+        window.addEventListener('ballPositionUpdate', (e) => {
+            this.updateActiveMovie(e.detail.movieIndex);
+        });
     },
+    beforeUnmount() {
+        // Clean up event listener
+        window.removeEventListener('ballPositionUpdate', this.updateActiveMovie);
+    }
 };
 </script>
 
@@ -505,6 +534,7 @@ canvas {
     width: 100%;
     height: auto;
     display: flex;
+    padding-bottom: 10em;
 }
 
 .parent {
@@ -517,7 +547,13 @@ canvas {
     width: calc(100% - 5px);
     height: auto;
     margin-inline: 2.5px;
-    object-fit: cover
+    object-fit: cover;
+    filter: brightness(0.5);
+    transition: filter 150ms linear;
+}
+
+.image.active img {
+    filter: brightness(1.5);
 }
 
 .drop {
@@ -536,5 +572,26 @@ canvas {
     text-align: center;
     font-size: 1.5em;
     justify-content: center;
+}
+
+.movie-name {
+    white-space: nowrap;
+    text-align: right;
+    display: block;
+    transform-origin: 0% center;
+    width: 100%;
+    transform: translateX(50%) rotate(90deg);
+    opacity: 0.4;
+    transition: all 150ms linear;
+}
+
+.dark .image.active .movie-name {
+    color: yellow;
+}
+
+.image.active .movie-name {
+    opacity: 1;
+    font-weight: bold;
+    text-shadow: 0px 0px 10px currentColor;
 }
 </style>
