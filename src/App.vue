@@ -4,8 +4,6 @@
             <darkmode-switch />
         </header>
         <main>
-            <about-text />
-
             <search-bar v-model="users" :action="() => submit()">
                 <advanced-options v-model="advancedOptions" />
             </search-bar>
@@ -16,7 +14,7 @@
                 <div v-else-if="submitted">
                     <not-found v-if="notFound" :status="notFoundStatus" />
                     <div v-else>
-                        <plinko v-if="movies && movies.length" :movies="movies" :advancedOptions="advancedOptions"></plinko>
+                        <plinko v-if="movies && movies.length && users" :list="users" :movies="movies" :advancedOptions="advancedOptions"></plinko>
                     </div>
 
                     <!--

@@ -10,7 +10,11 @@
                     <a :href="movie.slug" target="_blank">
                         <img :src="movie.image_url" />
                     </a>
-                    <span class="movie-name" v-text="movie.film_name"></span>
+                    <span class="movie-name">
+                        <span v-text="movie.film_name"></span>
+                        <a :href="movie.slug">++++</a>
+                        <a :href="thisList">-----</a>
+                    </span>
                 </div>
             </div>
         </div>
@@ -481,7 +485,7 @@ export default {
         return {
             widthPercentages: null,
             myp5: null,
-            activeMovieIndex: null,
+            activeMovieIndex: null
         };
     },
     props: {
@@ -489,9 +493,19 @@ export default {
             type: Array,
             required: true,
         },
+        list: {
+            type: String,
+            required: true
+        },
         advancedOptions: {
             type: Object,
             required: true
+        }
+    },
+    computed: {
+        thisList() {
+            const parts = this.list.split('/');
+            return 'https://www.letterboxd.com/' + parts[0] + '/list/' + parts[1];
         }
     },
     methods: {
@@ -500,7 +514,7 @@ export default {
         },
         updateActiveMovie(index) {
             this.activeMovieIndex = index;
-        },
+        }
     },
     mounted() {
         this.myp5 = new p5(sketch, this.$refs.myCanvas);
@@ -536,7 +550,7 @@ canvas {
     width: 100%;
     height: auto;
     display: flex;
-    padding-bottom: 10em;
+    padding-bottom: 15em;
 }
 
 .parent {
@@ -589,6 +603,15 @@ canvas {
     transform: translateX(50%) rotate(90deg);
     opacity: 0.4;
     transition: all 150ms linear;
+    display: flex;
+    gap: 1em;
+}
+
+.movie-name a {
+    opacity: 0.5;
+    font-weight: bold;
+    text-decoration: none;
+    color: currentColor;
 }
 
 .dark .image.active .movie-name {
