@@ -303,30 +303,23 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 
 func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
+	posterCount := 0  // Track the number of posters processed
 
 	ajc := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
-	ajc.OnHTML("li.poster-container", func(e *colly.HTMLElement) {
-		// Only process li elements that contain film posters
-		poster := e.DOM.Find("div.film-poster")
-		if poster.Length() == 0 {
-			return
-		}
-		
-		// Get the index of this li element
-		index := e.Index
-		
-		name := poster.AttrOr("data-film-name", "")
-		slug := poster.AttrOr("data-film-link", "")
-		img := poster.Find("img").AttrOr("src", "")
-		year := poster.AttrOr("data-film-release-year", "")
+	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
+		name := e.Attr("data-film-name")
+		slug := e.Attr("data-film-link")
+		img := e.ChildAttr("img", "src")
+		year := e.Attr("data-film-release-year")
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if index < 3 {
-			originalIndex = index
+		if posterCount < 3 {
+			originalIndex = posterCount
 		}
+		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
@@ -338,7 +331,7 @@ func scrape(url string, ch chan filmSend) {
 		ch <- ok(tempfilm)
 	})
 	c := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
@@ -365,9 +358,10 @@ func scrape(url string, ch chan filmSend) {
 
 func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own function
 	siteToVisit := url
+	posterCount := 0  // Track the number of posters processed
 	
 	ajc := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	extensions.RandomUserAgent(ajc)
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
@@ -379,9 +373,10 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Parent().Index() < 3 {
-			originalIndex = e.DOM.Parent().Index()
+		if posterCount < 3 {
+			originalIndex = posterCount
 		}
+		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
@@ -395,7 +390,7 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 	})
 
 	c := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	extensions.RandomUserAgent(c)
@@ -423,9 +418,10 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 func scrapeActor(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	fmt.Println(siteToVisit)
+	posterCount := 0  // Track the number of posters processed
 
 	c := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	c.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
@@ -436,9 +432,10 @@ func scrapeActor(actor string, ch chan filmSend) {
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Parent().Index() < 3 {
-			originalIndex = e.DOM.Parent().Index()
+		if posterCount < 3 {
+			originalIndex = posterCount
 		}
+		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
@@ -466,14 +463,15 @@ func scrapeActor(actor string, ch chan filmSend) {
 func scrapeActorWithLength(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	log.Println(siteToVisit)
+	posterCount := 0  // Track the number of posters processed
 
 	c := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	extensions.RandomUserAgent(c)
 	ajc := colly.NewCollector(
-		colly.Async(true),
+		colly.Async(false),
 	)
 	extensions.RandomUserAgent(ajc)
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
@@ -485,9 +483,10 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Parent().Index() < 3 {
-			originalIndex = e.DOM.Parent().Index()
+		if posterCount < 3 {
+			originalIndex = posterCount
 		}
+		posterCount++
 		
 		tempfilm := film{
 			Slug:  (site + slug),
