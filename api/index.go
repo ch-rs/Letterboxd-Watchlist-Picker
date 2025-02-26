@@ -307,16 +307,25 @@ func scrape(url string, ch chan filmSend) {
 	ajc := colly.NewCollector(
 		colly.Async(true),
 	)
-	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
-		name := e.Attr("data-film-name")
-		slug := e.Attr("data-film-link")
-		img := e.ChildAttr("img", "src")
-		year := e.Attr("data-film-release-year")
+	ajc.OnHTML("li.poster-container", func(e *colly.HTMLElement) {
+		// Only process li elements that contain film posters
+		poster := e.DOM.Find("div.film-poster")
+		if poster.Length() == 0 {
+			return
+		}
+		
+		// Get the index of this li element
+		index := e.Index
+		
+		name := poster.AttrOr("data-film-name", "")
+		slug := poster.AttrOr("data-film-link", "")
+		img := poster.Find("img").AttrOr("src", "")
+		year := poster.AttrOr("data-film-release-year", "")
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
-		if e.DOM.Parent().Index() < 3 {
-			originalIndex = e.DOM.Parent().Index()
+		if index < 3 {
+			originalIndex = index
 		}
 		
 		tempfilm := film{
