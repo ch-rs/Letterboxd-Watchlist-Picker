@@ -51,8 +51,12 @@
 			let pref = window.matchMedia("(prefers-color-scheme: dark)");
 			let darkModeIcon = document.getElementById("darkmode-icon");
 
-			if ((pref.matches && localStorage.getItem("dark-mode") === null) ||
-				localStorage.getItem("dark-mode") == 1) 
+			// Always default to dark mode if no preference is stored
+			if (localStorage.getItem("dark-mode") === null) {
+				localStorage.setItem("dark-mode", 1);
+			}
+
+			if (localStorage.getItem("dark-mode") == 1) 
 			{
 				document.body.classList.add("dark");
 				darkModeIcon.classList.remove("moon");
@@ -67,6 +71,7 @@
 				document.querySelector("meta[name=theme-color]").setAttribute("content", "#fff");
 			}
 
+			// Still listen for system preference changes, but only apply if user hasn't set a preference
 			window.matchMedia("(prefers-color-scheme: dark)").addListener(e => {
 				if (localStorage.getItem("dark-mode") === null) 
 				{

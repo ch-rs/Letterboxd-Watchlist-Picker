@@ -8,7 +8,7 @@
         </div>
 
         <div class="form-container">
-            <input id="userbox" class="userfield" type="text" placeholder="ex: holopollock, qjack" :value="value"
+            <input id="userbox" class="userfield" type="text" placeholder="username or username/list" :value="value"
                 v-on:keyup.enter="action()" v-on:input="updateValue($event.target.value)" />
             <button v-on:click="action()">Submit</button>
         </div>
