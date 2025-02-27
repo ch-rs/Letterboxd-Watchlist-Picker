@@ -1,11 +1,10 @@
 <template>
     <section>
         <label for="userbox"> Username(s): </label>
-        <div class="options">
-            <button v-on:click="updateValue('ch_rs/the-wheel')">
-                The Wheel
+        <div class="options" v-if="shortcuts && shortcuts.length > 0">
+            <button v-for="shortcut in shortcuts" :key="shortcut" v-on:click="updateValue(shortcut)">
+                {{ shortcut }}
             </button>
-            <button v-on:click="updateValue('ch_rs/eva-2')">EVA 2</button>
         </div>
 
         <div class="form-container">
@@ -24,6 +23,21 @@ import ding from '../utils/ding';
 export default {
     name: "SearchBar",
     props: ["value", "action"],
+    data() {
+        return {
+            shortcuts: []
+        };
+    },
+    created() {
+        this.loadShortcuts();
+        
+        // Add event listener for shortcut updates
+        window.addEventListener('shortcuts-updated', this.handleShortcutsUpdated);
+    },
+    beforeDestroy() {
+        // Clean up event listener when component is destroyed
+        window.removeEventListener('shortcuts-updated', this.handleShortcutsUpdated);
+    },
     methods: {
         updateValue: function (value) {
             this.$emit("input", value);
@@ -33,6 +47,24 @@ export default {
         },
         beep: function () {
             ding(Math.max(Math.random(), 0.3), Math.random() * 500);
+        },
+        loadShortcuts: function() {
+            const savedShortcuts = localStorage.getItem('userShortcuts');
+            if (savedShortcuts) {
+                try {
+                    this.shortcuts = JSON.parse(savedShortcuts);
+                } catch (e) {
+                    console.error('Failed to parse shortcuts from localStorage', e);
+                    this.shortcuts = [];
+                }
+            } else {
+                // Default shortcuts if none are saved
+                this.shortcuts = [
+                ];
+            }
+        },
+        handleShortcutsUpdated(event) {
+            this.shortcuts = event.detail;
         }
     },
 };

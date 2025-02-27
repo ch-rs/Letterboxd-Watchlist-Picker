@@ -119,6 +119,41 @@
 					</label>
 				</div>
 			</div>
+
+			<!-- New Shortcuts Section -->
+			<div class="shortcuts-container">
+				<h4>Shortcuts:</h4>
+				<div class="shortcut-input">
+					<input 
+						type="text" 
+						id="new-shortcut" 
+						v-model="newShortcut" 
+						placeholder="Enter username/path"
+						:tabindex="advancedOpen ? 0 : -1"
+					/>
+					<button 
+						@click="addShortcut" 
+						:tabindex="advancedOpen ? 0 : -1"
+					>
+						Add
+					</button>
+				</div>
+				<div class="shortcuts-list">
+					<div v-for="(shortcut, index) in shortcuts" :key="index" class="shortcut-item">
+						<span>{{ shortcut }}</span>
+						<button 
+							@click="removeShortcut(index)" 
+							class="remove-shortcut"
+							:tabindex="advancedOpen ? 0 : -1"
+						>
+							✕
+						</button>
+					</div>
+					<div v-if="shortcuts.length === 0" class="no-shortcuts">
+						No shortcuts added yet
+					</div>
+				</div>
+			</div>
 		</div>
 	</section>
 </template>
@@ -138,6 +173,8 @@
 				shortFilms: true,
 				featureLength: true,
 				advancedOpen: false,
+				shortcuts: [],
+				newShortcut: ""
 			};
 		},
 		created()
@@ -170,7 +207,8 @@
 				}
 			}
 
-			this.updateValues()
+			this.loadShortcuts();
+			this.updateValues();
 		},
 		methods:
 		{
@@ -215,6 +253,43 @@
 					'shortFilms': this.shortFilms,
 					'featureLength': this.featureLength
 				});
+			},
+
+			// New methods for shortcuts
+			loadShortcuts() {
+				const savedShortcuts = localStorage.getItem('userShortcuts');
+				if (savedShortcuts) {
+					try {
+						this.shortcuts = JSON.parse(savedShortcuts);
+					} catch (e) {
+						console.error('Failed to parse shortcuts from localStorage', e);
+						this.shortcuts = [];
+					}
+				}
+			},
+
+			saveShortcuts() {
+				localStorage.setItem('userShortcuts', JSON.stringify(this.shortcuts));
+				// Dispatch a custom event that other components can listen for
+				window.dispatchEvent(new CustomEvent('shortcuts-updated', {
+					detail: this.shortcuts
+				}));
+			},
+
+			addShortcut() {
+				if (this.newShortcut.trim()) {
+					// Prevent duplicates
+					if (!this.shortcuts.includes(this.newShortcut.trim())) {
+						this.shortcuts.push(this.newShortcut.trim());
+						this.saveShortcuts();
+					}
+					this.newShortcut = "";
+				}
+			},
+
+			removeShortcut(index) {
+				this.shortcuts.splice(index, 1);
+				this.saveShortcuts();
 			}
 		}
 	}
@@ -388,5 +463,95 @@
 	{
 		font-size: 12px;
 		display: inline-block;
+	}
+
+	/* New styles for shortcuts */
+	.shortcuts-container {
+		margin-top: 1rem;
+		padding: 1rem 0.8rem;
+	}
+
+	.shortcuts-container h4 {
+		margin-bottom: 0.5rem;
+	}
+
+	.shortcut-input {
+		display: flex;
+		margin-bottom: 0.8rem;
+	}
+
+	.shortcut-input input {
+		flex: 1;
+		padding: 5px 10px;
+		border: 1px solid var(--tertiary);
+		border-radius: 4px 0 0 4px;
+		font-family: inherit;
+	}
+
+	.shortcut-input button {
+		padding: 5px 10px;
+		background-color: var(--primary);
+		color: var(--white);
+		border: none;
+		border-radius: 0 4px 4px 0;
+		cursor: pointer;
+	}
+
+	.shortcuts-list {
+		max-height: 150px;
+		overflow-y: auto;
+		border: 1px solid var(--tertiary);
+		border-radius: 4px;
+		background-color: var(--off-white);
+	}
+
+	.shortcut-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 5px 10px;
+		border-bottom: 1px solid var(--tertiary);
+	}
+
+	.shortcut-item:last-child {
+		border-bottom: none;
+	}
+
+	.remove-shortcut {
+		background: none;
+		border: none;
+		color: var(--black);
+		cursor: pointer;
+		font-size: 0.8rem;
+		padding: 2px 5px;
+		border-radius: 50%;
+	}
+
+	.remove-shortcut:hover {
+		background-color: var(--tertiary);
+	}
+
+	.no-shortcuts {
+		padding: 10px;
+		text-align: center;
+		color: var(--black);
+		opacity: 0.6;
+	}
+
+	.dark .shortcuts-list {
+		background-color: var(--background);
+		color: var(--foreground);
+	}
+
+	.dark .shortcut-item {
+		border-color: var(--background);
+	}
+
+	.dark .remove-shortcut {
+		color: var(--foreground);
+	}
+
+	.dark .remove-shortcut:hover {
+		background-color: var(--background);
 	}
 </style>

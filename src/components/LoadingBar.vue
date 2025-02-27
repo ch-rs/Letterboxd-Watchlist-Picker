@@ -2,10 +2,6 @@
 	<div>
 		<h2>Loading Film</h2>
 		<div id="loading-bar"></div>
-		<p>
-			Is there a movie you're secretly rooting for? 
-			Choose that one! I give you permission.
-		</p>
 	</div>
 </template>
 
