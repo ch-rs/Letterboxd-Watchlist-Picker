@@ -8,7 +8,7 @@
                     'active': activeMovieIndex === i
                 }" :style="{ width: widthPercentages[i] + '%' }">
                     <a :href="movie.slug" target="_blank">
-                        <img :src="movie.image_data" class="movieImg" :ref="`movieImg${i}`" />
+                        <img :src="movie.image_data || movie.image" class="movieImg" :ref="`movieImg${i}`" />
                     </a>
                     <span class="movie-name">
                         <span v-text="movie.film_name"></span>
@@ -621,8 +621,6 @@ export default {
                         
                         const color = await extractDominantColor(img);
                         colors.push(color)
-                    } else {
-                        colors.push([255, 255, 255]); // Default white
                     }
 
                 } catch (error) {
