@@ -237,10 +237,26 @@ let sketch = function (p, parent) {
 
         for (let j = 0; j < rows; j++) {
             for (let i = 0; i < cols + 1; i++) {
-                let x = i * spacing;
-                if (j % 2 == 0) {
-                    x += spacing / 2;
+                // Calculate x position based on actual movie boundaries
+                let x;
+                if (i === 0) {
+                    // First plinko at left edge
+                    x = 0;
+                } else if (i === cols) {
+                    // Last plinko at right edge
+                    x = p.width;
+                } else {
+                    // Plinkos between movies - position at the boundary between movies
+                    x = p.movies[i - 1].x + p.movies[i - 1].width;
                 }
+                
+                // Add some offset for alternating rows to create the zigzag pattern
+                if (j % 2 == 0) {
+                    // For even rows, offset by half the average movie width
+                    const avgMovieWidth = p.width / p.movies.length;
+                    x += avgMovieWidth / 2;
+                }
+                
                 const y = rowStart + j * spacing;
                 const p = new Plinko(x, y, plinkoSize + (Math.random() * 1 - 0.5));
                 plinkos.push(p);
