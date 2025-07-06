@@ -42,6 +42,8 @@ import FilmResult from "./components/FilmResult.vue";
 import GoodbyteFooter from "./components/GoodbyteFooter.vue";
 import Plinko from "./components/Plinko.vue";
 
+import cache from "./cache.json"
+
 export default {
     name: "App",
     components: {
@@ -66,33 +68,33 @@ export default {
                     film_name: "The Shawshank Redemption",
                     slug: "https://www.imdb.com/title/tt0111161/",
                     image_url:
-                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                        "https://a.ltrbxd.com/resized/film-poster/1/0/4/5/1/1/5/1045115-didi--0-125-0-187-crop.jpg?v=e65b2443a7",
                 },
                 {
                     film_name: "The Godfather",
                     slug: "https://www.imdb.com/title/tt0068646/",
                     image_url:
-                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                        "https://a.ltrbxd.com/resized/sm/upload/7s/h0/6e/0f/hhsYCYVPy1V0eTjkGNGdvpDO2qk-0-125-0-187-crop.jpg?v=f8d5b0fe80",
                 },
                 {
                     film_name: "The Dark Knight",
                     slug: "https://www.imdb.com/title/tt0468569/",
                     original_index: 1,
                     image_url:
-                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                        "https://a.ltrbxd.com/resized/film-poster/5/0/8/2/4/6/508246-another-round-0-125-0-187-crop.jpg?v=6227862b11",
                 },
                 {
                     film_name: "The Shawshank Redemption",
                     slug: "https://www.imdb.com/title/tt0111161/",
                     image_url:
-                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                        "https://a.ltrbxd.com/resized/sm/upload/28/um/1t/jq/dYvyF1RlNokAd1N7Nek0vDpYsV6-0-125-0-187-crop.jpg?v=fc5d71c744",
                 },
                 {
                     film_name: "The Godfather",
                     slug: "https://www.imdb.com/title/tt0068646/",
                     original_index: 0,
                     image_url:
-                        "https://a.ltrbxd.com/resized/sm/upload/ji/5q/0k/rv/v6xrz4fr92KY1oNC3HsEvrsvR1n-0-230-0-345-crop.jpg?v=973d70bb0c",
+                        "https://a.ltrbxd.com/resized/film-poster/1/7/9/8/8/8/179888-gueros-0-125-0-187-crop.jpg?v=363c5f44ee",
                 },
                 {
                     film_name: "The Dark Knight",
@@ -236,7 +238,7 @@ export default {
                 // If localhost, use dummy data on this component
                 if (window.location.hostname == "localhost") {
                     this.loading = false;
-                    this.movies = [...this.movies];
+                    this.movies = cache.slice(0, 9)
                     return;
                 }
 
@@ -365,6 +367,8 @@ export default {
 body {
     background: var(--background);
 
+    margin: 30px 0 0 0;
+
     font-family:
         Avenir,
         -apple-system,
@@ -379,7 +383,6 @@ body {
     transition:
         color ease-in-out 0.25s,
         background-color ease-in-out 0.25s;
-    margin-top: 30px;
 }
 
 main {

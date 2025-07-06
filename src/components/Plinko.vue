@@ -8,7 +8,7 @@
                     'active': activeMovieIndex === i
                 }" :style="{ width: widthPercentages[i] + '%' }">
                     <a :href="movie.slug" target="_blank">
-                        <img :src="movie.image_url" />
+                        <img :src="movie.image_data" class="movieImg" :ref="`movieImg${i}`" />
                     </a>
                     <span class="movie-name">
                         <span v-text="movie.film_name"></span>
@@ -23,8 +23,9 @@
 
 <script>
 import ding from '../utils/ding';
+import { total } from '../utils/total';
 import distinctColors from 'distinct-colors'
-
+import { extractDominantColor } from '../utils/colorExtractor';
 
 const random = Matter.Common.random;
 const Engine = Matter.Engine;
@@ -45,15 +46,30 @@ let sketch = function (p, parent) {
         widthPercentages = [],
         rows = 10,
         rowStart = 100,
-        particleSize = 12,
+        particleSize = 8,
         slotWidth,
         ballPositions = {},
         alerted = false,
-        plinkoSize = 14;
+        plinkoSize = 14,
+        movieColors = [];
 
     p.setup = function () {
-        const c = p.createCanvas(612, 800);
-        c.parent(parent);
+        // Check if parent exists and has a width
+        if (!parent || !parent.offsetWidth) {
+            // Fallback to a default width if parent is not ready
+            const canvasWidth = 612;
+            const canvasHeight = 800;
+            const c = p.createCanvas(canvasWidth, canvasHeight);
+            c.parent(parent);
+        } else {
+            // Get the parent container width
+            const parentWidth = parent.offsetWidth;
+            const canvasWidth = parentWidth;
+            const canvasHeight = (canvasWidth * 800) / 612; // Maintain aspect ratio
+            
+            const c = p.createCanvas(canvasWidth, canvasHeight);
+            c.parent(parent);
+        }
 
         engine = Engine.create();
         world = engine.world;
@@ -106,12 +122,13 @@ let sketch = function (p, parent) {
 
     };
 
-    p.populate = function (newMovies) {
+    p.populate = function (newMovies, colors = null) {
         cols = newMovies.length;
         p.movies = newMovies;
+        movieColors = colors || [];
 
         // Calculate the width of each slot
-        setTimeout(() => {
+        setTimeout(async () => {
             // Check if we have valid original_index values
             const hasValidOriginalIndices = p.movies.some(movie =>
                 movie.original_index !== undefined &&
@@ -172,7 +189,7 @@ let sketch = function (p, parent) {
                 }
             }
 
-            slotWidth = p.width / p.movies.length; // Keep this for reference
+            slotWidth = p.width / p.movies.length;
 
             p.createPlinkos();
             p.createBoundaries();
@@ -225,41 +242,47 @@ let sketch = function (p, parent) {
             }
         }
 
-        palette = distinctColors({
-            count,
-            lightMin: 30,
-            lightMax: 45,
-            chromaMin: 20,
-            chromaMax: 100,
-            hueMin: 190,
-            hueMax: 300
-        });
+        // Use uniform spacing based on the number of movies (cols)
+        const uniformSpacing = p.width / cols;
+
+        if (movieColors.length < rows - 2) {
+            movieColors = movieColors.reduce(function (res, current, index, array) {
+                switch (Math.floor(rows / movieColors.length)) {
+                    case 2:
+                        return res.concat([current, current]);
+                    case 3:
+                        return res.concat([current, current, current]);
+                    case 4:
+                        return res.concat([current, current, current, current]);
+                    default:
+                        return res.concat([current, current]);
+                }
+            }, []);
+        }
 
         for (let j = 0; j < rows; j++) {
             for (let i = 0; i < cols + 1; i++) {
-                // Calculate x position based on actual movie boundaries
-                let x;
-                if (i === 0) {
-                    // First plinko at left edge
-                    x = 0;
-                } else if (i === cols) {
-                    // Last plinko at right edge
-                    x = p.width;
-                } else {
-                    // Plinkos between movies - position at the boundary between movies
-                    x = p.movies[i - 1].x + p.movies[i - 1].width;
-                }
+                // Position plinkos at uniform intervals across the width
+                let x = i * uniformSpacing;
                 
-                // Add some offset for alternating rows to create the zigzag pattern
+                // Add offset for alternating rows to create the zigzag pattern
                 if (j % 2 == 0) {
-                    // For even rows, offset by half the average movie width
-                    const avgMovieWidth = p.width / p.movies.length;
-                    x += avgMovieWidth / 2;
+                    x += uniformSpacing / 2;
                 }
                 
                 const y = rowStart + j * spacing;
-                const p = new Plinko(x, y, plinkoSize + (Math.random() * 1 - 0.5));
-                plinkos.push(p);
+                
+                // Assign color based on the movie below this plinko
+                let color = [255, 255, 255]; // Default white
+                if (movieColors.length > 0) {
+                    let movieIndex = Math.floor(j);
+                    if (movieIndex < 0) movieIndex = 0;
+                    if (movieIndex >= movieColors.length) movieIndex = movieColors.length - 1;
+                    color = movieColors[movieIndex];
+                }
+                
+                const pl = new Plinko(x, y, plinkoSize + (Math.random() * 1 - 0.5), color);
+                plinkos.push(pl);
             }
         }
     };
@@ -334,25 +357,6 @@ let sketch = function (p, parent) {
                     window.dispatchEvent(event);
                 }
             }
-
-            /*
-if (p.movies.length && this.checkIfStopped(particles[i])) {
-const segmentIndex = this.getSegmentIndex(particles[i]);
-console.log(segmentIndex)
-console.log(`Particle stopped in segment: ${segmentIndex}`);
-console.log(p.movies[segmentIndex]);
-setTimeout(() => {
-    if (!alerted) {
-        alert(`You will watch ${p.movies[segmentIndex].title}`);
-    }
-    alerted = true;
-
-   // Remove the particle from the world
-    particles.splice(i, 1);
-    i--;
-}, 1000);
-}
-            */
         }
 
         ballPositions = nextBallPositions
@@ -452,16 +456,23 @@ setTimeout(() => {
     //           Plinko.js
     // ======================================================
 
-    function Plinko(x, y, r) {
+    function Plinko(x, y, r, color = null) {
         const options = {
             isStatic: true,
             density: 1,
             restitution: 1,
             friction: 0,
         };
-        let color = palette[Math.floor(Math.random() * palette.length)];
-        this.color = [color._rgb[0], color._rgb[1], color._rgb[2]];
-        this.body = Bodies.circle(x + (Math.random() * 12) - 6, y + (Math.random() * 12) - 6, r, options);
+        
+        // Use provided color or fallback to random color from palette
+        if (color) {
+            this.color = color;
+        } else {
+            let paletteColor = palette[Math.floor(Math.random() * palette.length)];
+            this.color = [paletteColor._rgb[0], paletteColor._rgb[1], paletteColor._rgb[2]];
+        }
+        
+        this.body = Bodies.circle(x + (Math.random() * 5) - 6, y + (Math.random() * 5) - 6, r, options);
         this.body.label = "plinko";
         this.body.frequency = (Math.random() * 300) + (y * 0.5);
         this.r = r;
@@ -507,6 +518,31 @@ setTimeout(() => {
         p.rect(0, 0, this.w, this.h);
         p.pop();
     };
+
+    // Add a resize function to handle window resizing
+    p.windowResized = function() {
+        if (!parent || !parent.offsetWidth) {
+            return; // Don't resize if parent is not ready
+        }
+        
+        const canvasWidth = parent.offsetWidth;
+        const canvasHeight = (canvasWidth * 800) / 612; // Maintain aspect ratio
+        
+        p.resizeCanvas(canvasWidth, canvasHeight);
+        
+        // Recalculate spacing and other dimensions
+        spacing = p.width / cols;
+        
+        // Clear existing plinkos and boundaries
+        plinkos = [];
+        bounds = [];
+        
+        // Recreate plinkos and boundaries with new dimensions
+        if (p.movies && p.movies.length > 0) {
+            p.createPlinkos();
+            p.createBoundaries();
+        }
+    };
 };
 
 export default {
@@ -515,7 +551,8 @@ export default {
         return {
             widthPercentages: null,
             myp5: null,
-            activeMovieIndex: null
+            activeMovieIndex: null,
+            movieColors: []
         };
     },
     props: {
@@ -544,23 +581,85 @@ export default {
         },
         updateActiveMovie(index) {
             this.activeMovieIndex = index;
+        },
+        async waitForRefs(maxAttempts = 10) {
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                await this.$nextTick();
+                
+                // Check if all refs are available
+                const allRefsAvailable = this.movies.every((_, i) => {
+                    return this.$refs[`movieImg${i}`] && this.$refs[`movieImg${i}`][0];
+                });
+                
+                if (allRefsAvailable) {
+                    return true;
+                }
+                
+                // Wait a bit before next attempt
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            return false;
+        },
+        
+        async extractMovieColors() {
+            let colors = [];
+            
+            for (let i = 0; i < this.movies.length; i++) {
+                try {
+                    const movie = this.movies[i];
+                    if (movie.image_data) {
+                        // Create an image element from the base64 data
+                        const img = new Image();
+                        img.src = movie.image_data;
+                        
+                        // Wait for the image to load
+                        await new Promise((resolve, reject) => {
+                            img.onload = resolve;
+                            img.onerror = reject;
+                        });
+                        
+                        const color = await extractDominantColor(img);
+                        colors.push(color)
+                    } else {
+                        colors.push([255, 255, 255]); // Default white
+                    }
+
+                } catch (error) {
+                    console.warn('Error extracting color for movie:', this.movies[i].film_name, error);
+                    colors.push([255, 255, 255]); // Default white
+                }
+            }
+
+            colors = colors.filter(scheme => total(scheme) > 30).sort((b, a) => total(a) > total(b))
+            
+            return colors
+        },
+        async initializeCanvas() {
+            this.widthPercentages = Array(this.movies.length).fill(100/this.movies.length)
+
+            this.movieColors = await this.extractMovieColors();
+            
+            this.myp5 = new p5(sketch, this.$refs.myCanvas);
+            this.myp5.populate(this.movies, this.movieColors);
+            
+            setTimeout(() => {
+                this.widthPercentages = this.myp5.getWidthPercentages()
+            }, 2000);
         }
     },
     mounted() {
-        this.myp5 = new p5(sketch, this.$refs.myCanvas);
-        // Wait for movies to have length
-        this.myp5.populate(this.movies);
-        setTimeout(() => {
-            this.widthPercentages = this.myp5.getWidthPercentages()
-        }, 2000)
+        this.$nextTick(() => {
+            setTimeout(() => {
+                this.initializeCanvas();
+            }, 1000);
+        });
 
-        // Add event listener for ball position updates
         window.addEventListener('ballPositionUpdate', (e) => {
             this.updateActiveMovie(e.detail.movieIndex);
         });
     },
     beforeUnmount() {
-        // Clean up event listener
         window.removeEventListener('ballPositionUpdate', this.updateActiveMovie);
     }
 };
@@ -568,11 +667,12 @@ export default {
 
 <style>
 canvas {
-    width: 100vw;
-    height: auto;
+    width: 100% !important;
+    max-width: 800px;
+    height: auto !important;
     margin-block-start: 3em;
-    border: 3px solid #222;
-    border-top: 0;
+    margin-inline: auto;
+    border-bottom: 3px solid #222;
     position: relative;
     z-index: 2;
 }
@@ -580,9 +680,11 @@ canvas {
 .images {
     position: absolute;
     top: calc(100% - 10px);
-    left: -1px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 100%;
     height: auto;
+    max-width: 800px;
     display: flex;
     padding-bottom: 15em;
     z-index: 1;
@@ -590,7 +692,7 @@ canvas {
 
 .parent {
     position: relative;
-    width: fit-content;
+    width: 100%;
     margin: auto;
 }
 
