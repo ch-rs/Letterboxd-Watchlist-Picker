@@ -19,13 +19,13 @@ import (
 
 //Film struct for http response
 type film struct {
-	Slug         string `json:"slug"`         //url of film
-	Image        string `json:"image_url"`    //url of image
-	ImageData    string `json:"image_data"`   //base64 data URL of image
-	Year         string `json:"release_year"`
-	Name         string `json:"film_name"`
-	Length       string `json:"film_length"`
-	OriginalIndex int   `json:"original_index"` //original position in the list before shuffling (-1 if not in top)
+	Slug         string  `json:"slug"`         //url of film
+	Image        string  `json:"image_url"`    //url of image
+	ImageData    *string `json:"image_data"`   //base64 data URL of image
+	Year         string  `json:"release_year"`
+	Name         string  `json:"film_name"`
+	Length       string  `json:"film_length"`
+	OriginalIndex int     `json:"original_index"` //original position in the list before shuffling (-1 if not in top)
 }
 
 // Add a new response struct that includes URLs
@@ -368,6 +368,7 @@ func scrape(url string, ch chan filmSend) {
 	posterCount := 0  // Track the number of posters processed
 
 	ajc := colly.NewCollector()
+	filmIndex := 0
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
@@ -382,17 +383,23 @@ func scrape(url string, ch chan filmSend) {
 		posterCount++
 		
 		// Fetch image as base64
-		imageData := fetchImageAsBase64(img)
+		var imageData string
+		if filmIndex < 10 {
+			imageData = fetchImageAsBase64(img)
+		} else {
+			imageData = ""
+		}
 		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
-			ImageData: imageData,
+			ImageData: &imageData,
 			Year: year,
 			Name:  name,
 			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
+		filmIndex++
 	})
 	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
@@ -424,6 +431,7 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 	
 	ajc := colly.NewCollector()
 	extensions.RandomUserAgent(ajc)
+	filmIndex := 0
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
 		slug := e.ChildAttr("div.film-poster","data-film-link")
@@ -439,18 +447,24 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		posterCount++
 		
 		// Fetch image as base64
-		imageData := fetchImageAsBase64(img)
+		var imageData string
+		if filmIndex < 10 {
+			imageData = fetchImageAsBase64(img)
+		} else {
+			imageData = ""
+		}
 		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
-			ImageData: imageData,
+			ImageData: &imageData,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
 			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
+		filmIndex++
 	})
 
 	c := colly.NewCollector()
@@ -503,7 +517,7 @@ func scrapeActor(actor string, ch chan filmSend) {
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBiggerActor(img),
-			ImageData: imageData,
+			ImageData: &imageData,
 			Year: year,
 			Name:  name,
 			OriginalIndex: originalIndex,
@@ -534,6 +548,7 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 	extensions.RandomUserAgent(c)
 	ajc := colly.NewCollector()
 	extensions.RandomUserAgent(ajc)
+	filmIndex := 0
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
 		slug := e.ChildAttr("div.film-poster","data-film-link")
@@ -549,18 +564,24 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 		posterCount++
 		
 		// Fetch image as base64
-		imageData := fetchImageAsBase64(img)
+		var imageData string
+		if filmIndex < 10 {
+			imageData = fetchImageAsBase64(img)
+		} else {
+			imageData = ""
+		}
 		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
-			ImageData: imageData,
+			ImageData: &imageData,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
 			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
+		filmIndex++
 	})
 
 	c.OnHTML(".poster-container", func(e *colly.HTMLElement) {
