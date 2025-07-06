@@ -121,7 +121,7 @@ let sketch = function (p, parent) {
 
             if (hasValidOriginalIndices) {
                 // Define width multipliers for the oldest movies
-                const topMovieMultipliers = [2.5, 1.8, 1.4]; // Multipliers for movies with OriginalIndex 0, 1, 2
+                const topMovieMultipliers = [2, 1.66, 1.33]; // Multipliers for movies with OriginalIndex 0, 1, 2
 
                 // Calculate total width units
                 let totalWidthUnits = 0;
@@ -187,7 +187,7 @@ let sketch = function (p, parent) {
 
     p.newParticle = function () {
         alerted = false
-        const part = new Particle(random(5, p.width - 5), 0, particleSize);
+        const part = new Particle(p.width, 0, particleSize);
         particles.push(part);
     };
 
@@ -242,7 +242,7 @@ let sketch = function (p, parent) {
                     x += spacing / 2;
                 }
                 const y = rowStart + j * spacing;
-                const p = new Plinko(x, y, plinkoSize + (Math.random() * 5 - 2.5));
+                const p = new Plinko(x, y, plinkoSize + (Math.random() * 1 - 0.5));
                 plinkos.push(p);
             }
         }
