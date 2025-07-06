@@ -8,7 +8,7 @@
                     'active': activeMovieIndex === i
                 }" :style="{ width: widthPercentages[i] + '%' }">
                     <a :href="movie.slug" target="_blank">
-                        <img :src="movie.image_data || movie.image" class="movieImg" :ref="`movieImg${i}`" />
+                        <img :src="movie.image_data || movie.image_url" class="movieImg" :ref="`movieImg${i}`" />
                     </a>
                     <span class="movie-name">
                         <span v-text="movie.film_name"></span>
@@ -75,7 +75,7 @@ let sketch = function (p, parent) {
         world = engine.world;
         world.gravity.y = 0.45;
 
-        spacing = p.width / cols;
+        spacing = p.width / 10;
 
         Matter.Events.on(engine, "collisionStart", function (event) {
             for (let i = 0; i < event.pairs.length; i++) {
@@ -243,7 +243,7 @@ let sketch = function (p, parent) {
         }
 
         // Use uniform spacing based on the number of movies (cols)
-        const uniformSpacing = p.width / cols;
+        const uniformSpacing = p.width / Math.min(cols, 9);
 
         if (movieColors.length < rows - 2) {
             movieColors = movieColors.reduce(function (res, current, index, array) {
@@ -744,6 +744,7 @@ canvas {
     transition: all 150ms linear;
     display: flex;
     gap: 1em;
+    font-size: clamp(8px, 3vw, 18px);
 }
 
 .movie-name a {

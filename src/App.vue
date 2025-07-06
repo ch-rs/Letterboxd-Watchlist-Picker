@@ -238,7 +238,7 @@ export default {
                 // If localhost, use dummy data on this component
                 if (window.location.hostname == "localhost") {
                     this.loading = false;
-                    this.movies = cache.slice(0, 9)
+                    this.movies = [...cache, ...cache]
                     return;
                 }
 
