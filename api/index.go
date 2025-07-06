@@ -1,9 +1,11 @@
 package film
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -17,12 +19,13 @@ import (
 
 //Film struct for http response
 type film struct {
-	Slug       string `json:"slug"`         //url of film
-	Image      string `json:"image_url"`    //url of image
-	Year       string `json:"release_year"`
-	Name       string `json:"film_name"`
-	Length     string `json:"film_length"`
-	OriginalIndex int    `json:"original_index"` //original position in the list before shuffling (-1 if not in top)
+	Slug         string `json:"slug"`         //url of film
+	Image        string `json:"image_url"`    //url of image
+	ImageData    string `json:"image_data"`   //base64 data URL of image
+	Year         string `json:"release_year"`
+	Name         string `json:"film_name"`
+	Length       string `json:"film_length"`
+	OriginalIndex int   `json:"original_index"` //original position in the list before shuffling (-1 if not in top)
 }
 
 // Add a new response struct that includes URLs
@@ -301,6 +304,65 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 }
 
 
+// Add a new function to fetch image as base64
+func fetchImageAsBase64(imageURL string) string {
+	if imageURL == "" {
+		return ""
+	}
+
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Create request
+	req, err := http.NewRequest("GET", imageURL, nil)
+	if err != nil {
+		log.Printf("Error creating request for %s: %v", imageURL, err)
+		return ""
+	}
+
+	// Add headers to mimic a browser request
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+	req.Header.Set("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Cache-Control", "no-cache")
+
+	// Make the request
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error fetching image %s: %v", imageURL, err)
+		return ""
+	}
+	defer resp.Body.Close()
+
+	// Check if response is successful
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Error fetching image %s: status %d", imageURL, resp.StatusCode)
+		return ""
+	}
+
+	// Read the image data
+	imageData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading image data for %s: %v", imageURL, err)
+		return ""
+	}
+
+	// Get content type
+	contentType := resp.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "image/jpeg" // Default fallback
+	}
+
+	// Encode as base64
+	base64Data := base64.StdEncoding.EncodeToString(imageData)
+	
+	// Return as data URL
+	return fmt.Sprintf("data:%s;base64,%s", contentType, base64Data)
+}
+
+// Update the scraping functions to include image data
 func scrape(url string, ch chan filmSend) {
 	siteToVisit := url
 	posterCount := 0  // Track the number of posters processed
@@ -319,9 +381,13 @@ func scrape(url string, ch chan filmSend) {
 		}
 		posterCount++
 		
+		// Fetch image as base64
+		imageData := fetchImageAsBase64(img)
+		
 		tempfilm := film{
 			Slug:  (site + slug),
-			Image: makeBigger(img),
+			Image: img,
+			ImageData: imageData,
 			Year: year,
 			Name:  name,
 			OriginalIndex: originalIndex,
@@ -372,9 +438,13 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 		}
 		posterCount++
 		
+		// Fetch image as base64
+		imageData := fetchImageAsBase64(img)
+		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
+			ImageData: imageData,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
@@ -427,9 +497,13 @@ func scrapeActor(actor string, ch chan filmSend) {
 		}
 		posterCount++
 		
+		// Fetch image as base64
+		imageData := fetchImageAsBase64(makeBiggerActor(img))
+		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: makeBiggerActor(img),
+			ImageData: imageData,
 			Year: year,
 			Name:  name,
 			OriginalIndex: originalIndex,
@@ -474,9 +548,13 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 		}
 		posterCount++
 		
+		// Fetch image as base64
+		imageData := fetchImageAsBase64(img)
+		
 		tempfilm := film{
 			Slug:  (site + slug),
 			Image: img,
+			ImageData: imageData,
 			Year: year,
 			Name:  name,
 			Length: strings.TrimSpace(before(lenght,"mins")),
