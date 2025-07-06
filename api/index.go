@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -343,7 +344,7 @@ func fetchImageAsBase64(imageURL string) string {
 	}
 
 	// Read the image data
-	imageData, err := io.ReadAll(resp.Body)
+	imageData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Error reading image data for %s: %v", imageURL, err)
 		return ""
