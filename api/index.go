@@ -78,6 +78,8 @@ func (e *nothingError) Error() string {
 const urlscrape = "https://letterboxd.com/ajax/poster" //first part of url for getting full info on film
 const urlEnd = "std/125x187/"            // second part of url for getting full info on film
 const site = "https://letterboxd.com"
+const watchlistGridClass = ".poster-grid"
+const regularListGridClass = ".poster-list"
 
 
 // func main() {
@@ -267,12 +269,12 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, []
 
 func scrapeUserWithLength(userName string, ch chan filmSend) {
 	url := site + "/" + userName + "/watchlist"
-	scrapeWithLength(url, ch)
+	scrapeWithLength(url, watchlistGridClass, ch)
 }
 
 func scrapeUser(userName string, ch chan filmSend) {
 	url := site + "/" + userName + "/watchlist"
-	scrape(url, ch)
+	scrape(url, watchlistGridClass, ch)
 }
 
 func scrapeListWithLength(listNameIn string, ch chan filmSend) {
@@ -286,7 +288,7 @@ func scrapeListWithLength(listNameIn string, ch chan filmSend) {
 		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
 
 	}
-	scrapeWithLength(url, ch)
+	scrapeWithLength(url, regularListGridClass, ch)
 }
 
 func scrapeList(listNameIn string, ch chan filmSend) {
@@ -299,8 +301,7 @@ func scrapeList(listNameIn string, ch chan filmSend) {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
 		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
 	}
-
-	scrape(url, ch)
+	scrape(url, regularListGridClass, ch)
 }
 
 
@@ -363,7 +364,7 @@ func fetchImageAsBase64(imageURL string) string {
 }
 
 // Update the scraping functions to include image data
-func scrape(url string, ch chan filmSend) {
+func scrape(url string, posterGridClass string, ch chan filmSend) {
 	siteToVisit := url
 	posterCount := 0  // Track the number of posters processed
 
@@ -373,7 +374,7 @@ func scrape(url string, ch chan filmSend) {
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
 		img := e.ChildAttr("img", "src")
-		year := e.Attr("data-film-release-year")
+		year := getYear(e.ChildAttr("span", "title"))
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
@@ -403,9 +404,9 @@ func scrape(url string, ch chan filmSend) {
 	})
 	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
-	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
-		e.ForEach("div.film-poster", func(i int, ein *colly.HTMLElement) {
-			slug := ein.Attr("data-target-link")
+	c.OnHTML(posterGridClass, func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
+		e.ForEach("div.react-component", func(i int, ein *colly.HTMLElement) {
+			slug := ein.Attr("data-item-link")
 			ajc.Visit(urlscrape + slug + urlEnd) //start go routine to collect all film data
 		})
 
@@ -425,7 +426,7 @@ func scrape(url string, ch chan filmSend) {
 }
 
 
-func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own function
+func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //is slower so is own function
 	siteToVisit := url
 	posterCount := 0  // Track the number of posters processed
 	
@@ -433,10 +434,10 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 	extensions.RandomUserAgent(ajc)
 	filmIndex := 0
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
-		name := e.ChildText("span.frame-title")
-		slug := e.ChildAttr("div.film-poster","data-film-link")
+		name :=e.ChildAttr("div.react-component","data-item-name")
+		slug := e.ChildAttr("div.react-component","data-item-link")
 		img := e.ChildAttr("img", "src")
-		year := e.ChildAttr("div.film-poster","data-film-release-year")
+		year := getYear(e.ChildAttr("div.react-component","data-item-full-display-name"))
 		lenght := e.ChildText("p.text-footer")
 		
 		// Set original index for the first 3 films, -1 for the rest
@@ -470,9 +471,9 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	extensions.RandomUserAgent(c)
-	c.OnHTML(".poster-container", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
-		e.ForEach("div.film-poster", func(i int, ein *colly.HTMLElement) {
-			slug := ein.Attr("data-target-link")
+	c.OnHTML(posterGridClass, func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
+		e.ForEach("div.react-component", func(i int, ein *colly.HTMLElement) {
+			slug := ein.Attr("data-item-link")
 			ajc.Visit(site + slug) //start go routine to collect all film data
 		})
 
@@ -491,6 +492,7 @@ func scrapeWithLength(url string, ch chan filmSend) { //is slower so is own func
 
 }
 
+//fix later
 func scrapeActor(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	fmt.Println(siteToVisit)
@@ -538,6 +540,7 @@ func scrapeActor(actor string, ch chan filmSend) {
 
 }
 
+//fix later
 func scrapeActorWithLength(actor string, ch chan filmSend) {
 	siteToVisit := site + "/" + actor
 	log.Println(siteToVisit)
@@ -697,6 +700,15 @@ func before(value string, a string) string {
     return value[0:pos]
 }
 
+func after(value string, a string) string {
+    // Get substring before a string.
+    pos := strings.Index(value, a)
+    if pos == -1 {
+        return ""
+    }
+    return value[pos:]
+}
+
 func contains(s []string, e string) bool {
     for _, a := range s {
         if a == e {
@@ -704,6 +716,16 @@ func contains(s []string, e string) bool {
         }
     }
     return false
+}
+
+func getYear(name string) string {
+	year := after(name, "(")
+	if year != "" {
+		return string(year[1:len(year)-1])
+	} else {
+		return "0"
+	}
+
 }
 
 func whatToIgnore(ignoreString string) toIgnore {
