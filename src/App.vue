@@ -397,8 +397,8 @@ main {
 }
 
 #film-results {
-    margin: -20px 0;
-    transform: translateY(-160px);
+    margin: 0;
+    transform: translateY(0px);
     transition: transform 0.3s ease;
 }
 
