@@ -419,45 +419,43 @@ func getPosterURLAndDataBySlug(slug string, filmIndex int) (string, string) {
 // Update the scraping functions to include image data
 func scrape(url string, posterGridClass string, ch chan filmSend) {
 	siteToVisit := url
-	posterCount := 0 // Track the number of posters processed
-
-	ajc := colly.NewCollector()
+	posterCount := 0
 	filmIndex := 0
-	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
-		name := e.Attr("data-item-full-display-name")
-		slug := e.Attr("data-film-link")
-		year := getYear(e.ChildAttr("span", "title"))
 
-		// Set original index for the first 3 films, -1 for the rest
-		originalIndex := -1
-		if posterCount < 3 {
-			originalIndex = posterCount
-		}
-		posterCount++
-
-		// Fetch poster URL and optional base64 via JSON endpoint
-		img, imageData := getPosterURLAndDataBySlug(slug, filmIndex)
-
-		tempfilm := film{
-			Slug:          (site + slug),
-			Image:         img,
-			ImageData:     &imageData,
-			Year:          year,
-			Name:          name,
-			OriginalIndex: originalIndex,
-		}
-		ch <- ok(tempfilm)
-		filmIndex++
-	})
 	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
-	c.OnHTML(posterGridClass, func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
-		e.ForEach("div.react-component", func(i int, ein *colly.HTMLElement) {
-			slug := ein.Attr("data-item-link")
-			ajc.Visit(urlscrape + slug + urlEnd) //start go routine to collect all film data
-		})
 
+	c.OnHTML(posterGridClass, func(e *colly.HTMLElement) {
+		e.ForEach("div.react-component", func(i int, ein *colly.HTMLElement) {
+			name := ein.Attr("data-item-name")
+			if name == "" {
+				// fallback used previously
+				name = ein.Attr("data-item-full-display-name")
+			}
+			slug := ein.Attr("data-item-link")
+			year := getYear(ein.Attr("data-item-full-display-name"))
+
+			originalIndex := -1
+			if posterCount < 3 {
+				originalIndex = posterCount
+			}
+			posterCount++
+
+			img, imageData := getPosterURLAndDataBySlug(slug, filmIndex)
+
+			tempfilm := film{
+				Slug:          (site + slug),
+				Image:         img,
+				ImageData:     &imageData,
+				Year:          year,
+				Name:          name,
+				OriginalIndex: originalIndex,
+			}
+			ch <- ok(tempfilm)
+			filmIndex++
+		})
 	})
+
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
 		if strings.Contains(link, "/page") {
@@ -467,9 +465,7 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 
 	c.Visit(siteToVisit)
 	c.Wait()
-	ajc.Wait()
-	ch <- done() // users has finished so send done through channel
-
+	ch <- done()
 }
 
 func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //is slower so is own function
