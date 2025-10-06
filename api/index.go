@@ -373,7 +373,8 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
-		img := e.ChildAttr("img", "src")
+		shortSlug := e.Attr("data-item-slug")
+		id := e.Attr("data-film-id")
 		year := getYear(e.ChildAttr("span", "title"))
 		
 		// Set original index for the first 3 films, -1 for the rest
@@ -382,6 +383,9 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 			originalIndex = posterCount
 		}
 		posterCount++
+
+		idJoined := strings.Join(strings.Split(id, ""), "/")
+		img := "https://a.ltrbxd.com/resized/film-poster/" + idJoined + "/" + id + "-" + shortSlug + "-0-230-0-345-crop.jpg"
 		
 		// Fetch image as base64
 		var imageData string
