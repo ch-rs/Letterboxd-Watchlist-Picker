@@ -354,12 +354,14 @@
 		opacity: 0;
 		transition: 0.3s ease;
 		transform: translateY(0px);
+		height: 0;
 	}
 
 	#collapsable.active
 	{
 		opacity: 1;
 		transform: translateY(5px);
+		height: auto;
 	}
 
 
