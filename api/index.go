@@ -373,8 +373,7 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
-		shortSlug := e.Attr("data-item-slug")
-		id := e.Attr("data-film-id")
+		img := e.ChildAttr("img", "src")
 		year := getYear(e.ChildAttr("span", "title"))
 		
 		// Set original index for the first 3 films, -1 for the rest
@@ -383,9 +382,6 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 			originalIndex = posterCount
 		}
 		posterCount++
-
-		idJoined := strings.Join(strings.Split(id, ""), "/")
-		img := "https://a.ltrbxd.com/resized/film-poster/" + idJoined + "/" + id + "-" + shortSlug + "-0-230-0-345-crop.jpg"
 		
 		// Fetch image as base64
 		var imageData string
@@ -440,23 +436,9 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name :=e.ChildAttr("div.react-component","data-item-name")
 		slug := e.ChildAttr("div.react-component","data-item-link")
+		img := e.ChildAttr("img", "src")
 		year := getYear(e.ChildAttr("div.react-component","data-item-full-display-name"))
 		lenght := e.ChildText("p.text-footer")
-		
-		shortSlug := e.ChildAttr("div.film-poster", "data-item-slug")
-		if shortSlug == "" {
-			shortSlug = e.ChildAttr("div.react-component", "data-item-slug")
-		}
-		id := e.ChildAttr("div.film-poster", "data-film-id")
-		if id == "" {
-			id = e.ChildAttr("div.react-component", "data-film-id")
-		}
-		if id == "" || shortSlug == "" {
-			// Skip if we can’t build a valid image URL
-			return
-		}
-		idJoined := strings.Join(strings.Split(id, ""), "/")
-		img := "https://a.ltrbxd.com/resized/film-poster/" + idJoined + "/" + id + "-" + shortSlug + "-0-230-0-345-crop.jpg"
 		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
@@ -464,7 +446,7 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 			originalIndex = posterCount
 		}
 		posterCount++
-
+		
 		// Fetch image as base64
 		var imageData string
 		if filmIndex < 10 {
