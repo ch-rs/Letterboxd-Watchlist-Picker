@@ -169,8 +169,8 @@
 			return {
 				relative: true,
 				selectionMode: "Union",
-				unreleased: false,
-				shortFilms: false,
+				unreleased: true,
+				shortFilms: true,
 				featureLength: true,
 				advancedOpen: false,
 				shortcuts: [],
