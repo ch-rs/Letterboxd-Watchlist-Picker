@@ -357,6 +357,65 @@ func fetchImageAsBase64(imageURL string) string {
 	return fmt.Sprintf("data:%s;base64,%s", contentType, base64Data)
 }
 
+// Fetch poster URL (via Letterboxd JSON endpoint) and optionally base64 data.
+// Accepts either "/film/<slug>/" or just "<slug>" for the slug argument.
+// Only fetches base64 for the first 10 items (by filmIndex) to constrain payload size.
+func getPosterURLAndDataBySlug(slug string, filmIndex int) (string, string) {
+	cleaned := strings.TrimSpace(slug)
+	var filmPath string
+	if strings.HasPrefix(cleaned, "/film/") {
+		if !strings.HasSuffix(cleaned, "/") {
+			cleaned += "/"
+		}
+		filmPath = cleaned
+	} else {
+		filmPath = "/film/" + strings.Trim(cleaned, "/") + "/"
+	}
+
+	posterEndpoint := site + filmPath + "poster/std/125/"
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", posterEndpoint, nil)
+	if err != nil {
+		log.Printf("Error creating poster request for %s: %v", posterEndpoint, err)
+		return "", ""
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+	req.Header.Set("Accept", "application/json, text/javascript, */*; q=0.01")
+	req.Header.Set("X-Requested-With", "XMLHttpRequest")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error requesting poster URL for %s: %v", filmPath, err)
+		return "", ""
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Non-200 when requesting poster URL for %s: %d", filmPath, resp.StatusCode)
+		return "", ""
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading poster response body for %s: %v", filmPath, err)
+		return "", ""
+	}
+
+	var pr struct {
+		URL string `json:"url"`
+	}
+	if err := json.Unmarshal(body, &pr); err != nil {
+		log.Printf("Error parsing poster JSON for %s: %v", filmPath, err)
+		return "", ""
+	}
+
+	var imageData string
+	if filmIndex < 10 && pr.URL != "" {
+		imageData = fetchImageAsBase64(pr.URL)
+	}
+	return pr.URL, imageData
+}
+
 // Update the scraping functions to include image data
 func scrape(url string, posterGridClass string, ch chan filmSend) {
 	siteToVisit := url
@@ -367,7 +426,6 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 	ajc.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //secondard cleector to get main data for film
 		name := e.Attr("data-item-full-display-name")
 		slug := e.Attr("data-film-link")
-		img := e.ChildAttr("img", "src")
 		year := getYear(e.ChildAttr("span", "title"))
 
 		// Set original index for the first 3 films, -1 for the rest
@@ -377,13 +435,8 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 		}
 		posterCount++
 
-		// Fetch image as base64
-		var imageData string
-		if filmIndex < 10 {
-			imageData = fetchImageAsBase64(img)
-		} else {
-			imageData = ""
-		}
+		// Fetch poster URL and optional base64 via JSON endpoint
+		img, imageData := getPosterURLAndDataBySlug(slug, filmIndex)
 
 		tempfilm := film{
 			Slug:          (site + slug),
@@ -429,7 +482,7 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildAttr("div.react-component", "data-item-name")
 		slug := e.ChildAttr("div.react-component", "data-item-link")
-		img := e.ChildAttr("img", "src")
+		// Poster URL is no longer in <img>; fetch via JSON endpoint
 		year := getYear(e.ChildAttr("div.react-component", "data-item-full-display-name"))
 		lenght := e.ChildText("p.text-footer")
 
@@ -440,13 +493,7 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 		}
 		posterCount++
 
-		// Fetch image as base64
-		var imageData string
-		if filmIndex < 10 {
-			imageData = fetchImageAsBase64(img)
-		} else {
-			imageData = ""
-		}
+		img, imageData := getPosterURLAndDataBySlug(slug, filmIndex)
 
 		tempfilm := film{
 			Slug:          (site + slug),
@@ -493,10 +540,10 @@ func scrapeActor(actor string, ch chan filmSend) {
 
 	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
+	filmIndex := 0
 	c.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
 		name := e.Attr("data-film-name")
 		slug := e.Attr("data-film-link")
-		img := e.ChildAttr("img", "src")
 		year := e.Attr("data-film-release-year")
 
 		// Set original index for the first 3 films, -1 for the rest
@@ -506,18 +553,19 @@ func scrapeActor(actor string, ch chan filmSend) {
 		}
 		posterCount++
 
-		// Fetch image as base64
-		imageData := fetchImageAsBase64(makeBiggerActor(img))
+		// Fetch poster URL and optional base64 via JSON endpoint
+		img, imageData := getPosterURLAndDataBySlug(slug, filmIndex)
 
 		tempfilm := film{
 			Slug:          (site + slug),
-			Image:         makeBiggerActor(img),
+			Image:         img,
 			ImageData:     &imageData,
 			Year:          year,
 			Name:          name,
 			OriginalIndex: originalIndex,
 		}
 		ch <- ok(tempfilm)
+		filmIndex++
 	})
 
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
@@ -548,7 +596,6 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
 		slug := e.ChildAttr("div.film-poster", "data-film-link")
-		img := e.ChildAttr("img", "src")
 		year := e.ChildAttr("div.film-poster", "data-film-release-year")
 		lenght := e.ChildText("p.text-footer")
 
@@ -559,13 +606,8 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 		}
 		posterCount++
 
-		// Fetch image as base64
-		var imageData string
-		if filmIndex < 10 {
-			imageData = fetchImageAsBase64(img)
-		} else {
-			imageData = ""
-		}
+		// Fetch poster URL and optional base64 via JSON endpoint
+		img, imageData := getPosterURLAndDataBySlug(slug, filmIndex)
 
 		tempfilm := film{
 			Slug:          (site + slug),
