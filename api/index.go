@@ -442,19 +442,29 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 		slug := e.ChildAttr("div.react-component","data-item-link")
 		year := getYear(e.ChildAttr("div.react-component","data-item-full-display-name"))
 		lenght := e.ChildText("p.text-footer")
-		shortSlug := e.Attr("data-item-slug")
-		id := e.Attr("data-film-id")
-
+		
+		shortSlug := e.ChildAttr("div.film-poster", "data-item-slug")
+		if shortSlug == "" {
+			shortSlug = e.ChildAttr("div.react-component", "data-item-slug")
+		}
+		id := e.ChildAttr("div.film-poster", "data-film-id")
+		if id == "" {
+			id = e.ChildAttr("div.react-component", "data-film-id")
+		}
+		if id == "" || shortSlug == "" {
+			// Skip if we can’t build a valid image URL
+			return
+		}
+		idJoined := strings.Join(strings.Split(id, ""), "/")
+		img := "https://a.ltrbxd.com/resized/film-poster/" + idJoined + "/" + id + "-" + shortSlug + "-0-230-0-345-crop.jpg"
+		
 		// Set original index for the first 3 films, -1 for the rest
 		originalIndex := -1
 		if posterCount < 3 {
 			originalIndex = posterCount
 		}
 		posterCount++
-		
-		idJoined := strings.Join(strings.Split(id, ""), "/")
-		img := "https://a.ltrbxd.com/resized/film-poster/" + idJoined + "/" + id + "-" + shortSlug + "-0-230-0-345-crop.jpg"
-		
+
 		// Fetch image as base64
 		var imageData string
 		if filmIndex < 10 {
