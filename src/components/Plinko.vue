@@ -204,7 +204,8 @@ let sketch = function (p, parent) {
 
     p.newParticle = function () {
         alerted = false
-        const part = new Particle(p.width, 0, particleSize);
+        const randomX = Math.random() * p.width;
+        const part = new Particle(randomX, 0, particleSize);
         particles.push(part);
     };
 
