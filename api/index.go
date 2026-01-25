@@ -81,6 +81,23 @@ const site = "https://letterboxd.com"
 const watchlistGridClass = ".poster-grid"
 const regularListGridClass = ".poster-list"
 
+// Helper function to set realistic browser headers to avoid CloudFlare detection
+func setBrowserHeaders(c *colly.Collector) {
+	c.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+		r.Headers.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+		r.Headers.Set("Accept-Language", "en-US,en;q=0.9")
+		r.Headers.Set("Accept-Encoding", "gzip, deflate, br")
+		r.Headers.Set("DNT", "1")
+		r.Headers.Set("Connection", "keep-alive")
+		r.Headers.Set("Upgrade-Insecure-Requests", "1")
+		r.Headers.Set("Sec-Fetch-Dest", "document")
+		r.Headers.Set("Sec-Fetch-Mode", "navigate")
+		r.Headers.Set("Sec-Fetch-Site", "none")
+		r.Headers.Set("Cache-Control", "max-age=0")
+	})
+}
+
 // func main() {
 // 	getFilmHandler := http.HandlerFunc(Handler)
 // 	http.Handle("/film", getFilmHandler)
@@ -432,10 +449,22 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 	filmIndex := 0
 
 	c := colly.NewCollector()
-	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
+	// Reduce parallelism to avoid triggering CloudFlare rate limits
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 2,
+		Delay:       1 * time.Second, // Add delay between requests
+	})
+
+	// Add browser headers and random user agent
+	setBrowserHeaders(c)
+	extensions.RandomUserAgent(c)
 
 	c.OnError(func(r *colly.Response, err error) {
 		log.Printf("Error scraping %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 403 {
+			log.Printf("403 Forbidden (likely CloudFlare) for URL: %s", r.Request.URL)
+		}
 		if r.StatusCode == 404 {
 			log.Printf("404 Not Found for URL: %s", r.Request.URL)
 		}
@@ -490,8 +519,17 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 
 	ajc := colly.NewCollector()
 	extensions.RandomUserAgent(ajc)
+	setBrowserHeaders(ajc)
+	ajc.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 2,
+		Delay:       1 * time.Second,
+	})
 	ajc.OnError(func(r *colly.Response, err error) {
 		log.Printf("Error scraping film page %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 403 {
+			log.Printf("403 Forbidden (likely CloudFlare) for film page: %s", r.Request.URL)
+		}
 	})
 	filmIndex := 0
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
@@ -524,11 +562,19 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 	})
 
 	c := colly.NewCollector()
-	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 2,
+		Delay:       1 * time.Second,
+	})
 	extensions.RandomUserAgent(c)
+	setBrowserHeaders(c)
 
 	c.OnError(func(r *colly.Response, err error) {
 		log.Printf("Error scraping %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 403 {
+			log.Printf("403 Forbidden (likely CloudFlare) for URL: %s", r.Request.URL)
+		}
 		if r.StatusCode == 404 {
 			log.Printf("404 Not Found for URL: %s", r.Request.URL)
 		}
@@ -562,7 +608,21 @@ func scrapeActor(actor string, ch chan filmSend) {
 	posterCount := 0 // Track the number of posters processed
 
 	c := colly.NewCollector()
-	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 2,
+		Delay:       1 * time.Second,
+	})
+	setBrowserHeaders(c)
+	extensions.RandomUserAgent(c)
+
+	c.OnError(func(r *colly.Response, err error) {
+		log.Printf("Error scraping actor page %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 403 {
+			log.Printf("403 Forbidden (likely CloudFlare) for actor page: %s", r.Request.URL)
+		}
+	})
+
 	filmIndex := 0
 	c.OnHTML("div.film-poster", func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
 		name := e.Attr("data-film-name")
@@ -611,10 +671,37 @@ func scrapeActorWithLength(actor string, ch chan filmSend) {
 	posterCount := 0 // Track the number of posters processed
 
 	c := colly.NewCollector()
-	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 2,
+		Delay:       1 * time.Second,
+	})
 	extensions.RandomUserAgent(c)
+	setBrowserHeaders(c)
+
+	c.OnError(func(r *colly.Response, err error) {
+		log.Printf("Error scraping actor page %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 403 {
+			log.Printf("403 Forbidden (likely CloudFlare) for actor page: %s", r.Request.URL)
+		}
+	})
+
 	ajc := colly.NewCollector()
 	extensions.RandomUserAgent(ajc)
+	setBrowserHeaders(ajc)
+	ajc.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 2,
+		Delay:       1 * time.Second,
+	})
+
+	ajc.OnError(func(r *colly.Response, err error) {
+		log.Printf("Error scraping film page %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 403 {
+			log.Printf("403 Forbidden (likely CloudFlare) for film page: %s", r.Request.URL)
+		}
+	})
+
 	filmIndex := 0
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildText("span.frame-title")
