@@ -104,10 +104,8 @@ func init() {
 // Main handler func for request
 func Handler(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-	log.Println(year)
 	query := r.URL.Query() //Get URL Params(type map)
 	users, ok := query["users"]
-	log.Println(len(users))
 	if !ok || len(users) == 0 {
 		http.Error(w, "no users", 400)
 		return
@@ -119,7 +117,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	if len(ignore) > 0 {
 		ignoreing = whatToIgnore(ignore[0])
 	}
-	log.Println(ignoreing)
 
 	var userFilm []film
 	var err error
@@ -173,7 +170,6 @@ func scrapeMain(users []string, intersect bool, ignoreList toIgnore) ([]film, []
 
 	// start go routine to scrape each user
 	for _, a := range users {
-		log.Println(a)
 		user++
 		var url string
 
@@ -275,13 +271,19 @@ func scrapeUser(userName string, ch chan filmSend) {
 func scrapeListWithLength(listNameIn string, ch chan filmSend) {
 	url := ""
 	listname := strings.ToLower(listNameIn)
+	listname = strings.Trim(listname, "/") // Remove leading/trailing slashes
 
 	if strings.Contains(listname, "/list/") {
 		url = site + "/" + listname + "/by/added-earliest/"
 	} else {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
-		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
-
+		if len(strslice) >= 2 {
+			url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
+		} else {
+			log.Printf("Invalid list format: %s", listNameIn)
+			ch <- done()
+			return
+		}
 	}
 	scrapeWithLength(url, regularListGridClass, ch)
 }
@@ -289,12 +291,19 @@ func scrapeListWithLength(listNameIn string, ch chan filmSend) {
 func scrapeList(listNameIn string, ch chan filmSend) {
 	url := ""
 	listname := strings.ToLower(listNameIn)
+	listname = strings.Trim(listname, "/") // Remove leading/trailing slashes
 
 	if strings.Contains(listname, "/list/") {
 		url = site + "/" + listname + "/by/added-earliest/"
 	} else {
 		strslice := strings.Split(listname, "/") //strslice[0] is user name strslice[1] is listname
-		url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
+		if len(strslice) >= 2 {
+			url = site + "/" + strslice[0] + "/list/" + strslice[1] + "/by/added-earliest/"
+		} else {
+			log.Printf("Invalid list format: %s", listNameIn)
+			ch <- done()
+			return
+		}
 	}
 	scrape(url, regularListGridClass, ch)
 }
@@ -425,6 +434,13 @@ func scrape(url string, posterGridClass string, ch chan filmSend) {
 	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 
+	c.OnError(func(r *colly.Response, err error) {
+		log.Printf("Error scraping %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 404 {
+			log.Printf("404 Not Found for URL: %s", r.Request.URL)
+		}
+	})
+
 	c.OnHTML(posterGridClass, func(e *colly.HTMLElement) {
 		e.ForEach("div.react-component", func(i int, ein *colly.HTMLElement) {
 			name := ein.Attr("data-item-name")
@@ -474,6 +490,9 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 
 	ajc := colly.NewCollector()
 	extensions.RandomUserAgent(ajc)
+	ajc.OnError(func(r *colly.Response, err error) {
+		log.Printf("Error scraping film page %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+	})
 	filmIndex := 0
 	ajc.OnHTML("div#film-page-wrapper", func(e *colly.HTMLElement) {
 		name := e.ChildAttr("div.react-component", "data-item-name")
@@ -507,6 +526,14 @@ func scrapeWithLength(url string, posterGridClass string, ch chan filmSend) { //
 	c := colly.NewCollector()
 	c.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 100})
 	extensions.RandomUserAgent(c)
+
+	c.OnError(func(r *colly.Response, err error) {
+		log.Printf("Error scraping %s: %v (Status: %d)", r.Request.URL, err, r.StatusCode)
+		if r.StatusCode == 404 {
+			log.Printf("404 Not Found for URL: %s", r.Request.URL)
+		}
+	})
+
 	c.OnHTML(posterGridClass, func(e *colly.HTMLElement) { //primary scarer to get url of each film that contian full information
 		e.ForEach("div.react-component", func(i int, ein *colly.HTMLElement) {
 			slug := ein.Attr("data-item-link")
